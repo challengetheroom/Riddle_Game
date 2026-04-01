@@ -383,9 +383,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                     <!-- En-tête dépliable -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h3 style="margin: 0;">🎨 Personnalisation des couleurs</h3>
-                        <button type="button" id="toggle-theme" style="background: #007BFF; border: none; font-size: 18px; cursor: pointer; padding: 8px 12px; transition: transform 0.3s; color: white; border-radius: 6px;" title="Plier/Déplier">
-                            ▼
-                        </button>
+                        <button type="button" id="toggle-theme" style="background: #007BFF; border: none; font-size: 18px; cursor: pointer; padding: 8px 12px; transition: background 0.2s, transform 0.3s; color: white; border-radius: 6px;" title="Plier/Déplier" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007BFF'">▼</button>
                     </div>
 
                     <div id="theme-panel">
