@@ -154,6 +154,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "Énigme '$nom' supprimée.";
         }
     }
+    // --- SUPPRIMER TOUTES LES ÉNIGMES ---
+    elseif ($action === 'delete_all_enigmes') {
+        $count = 0;
+        // On parcourt toutes les clés du fichier datas.txt
+        foreach (array_keys($datas) as $key) {
+            // Si la clé n'est PAS un réglage de configuration, c'est une énigme : on la supprime
+            if (!in_array($key, $RESERVED_KEYS)) {
+                unset($datas[$key]);
+                $count++;
+            }
+        }
+        $message = "⚠️ Toutes les énigmes ($count au total) ont été supprimées.";
+    }
     // --- VIDER INTÉGRALEMENT UN FICHIER TXT ---
     elseif ($action === 'reset_file') {
         $fileType = $_POST['file_type'] ?? ''; // 'datas' ou 'received'
@@ -220,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // SAUVEGARDE FINALE DE DATAS.TXT
     // ========================================================================
     // Si l'action exécutée fait partie de cette liste blanche, on chiffre et on sauvegarde $datas.
-    if (in_array($action, ['add_enigme','update_enigme','delete_enigme','update_theme','update_options','update_messages', 'reset_file'])) {
+    if (in_array($action, ['add_enigme','update_enigme','delete_enigme','delete_all_enigmes','update_theme','update_options','update_messages', 'reset_file'])) {
         // Trie le tableau par ordre alphabétique naturel (Enigme 1, Enigme 2, Enigme 10...)
         ksort($datas, SORT_NATURAL | SORT_FLAG_CASE);
         // Conversion en JSON lisible
@@ -229,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $enc = encryptData($plaintext, $ENCRYPT_KEY, $ENCRYPT_IV);
         // Écriture sécurisée (LOCK_EX empêche qu'un autre processus lise le fichier pendant l'écriture)
         file_put_contents($datasFile, $enc, LOCK_EX);
-        
+
         // Redirection (empêche le comportement F5 = renvoi du formulaire POST)
         header("Location: index.php?tab=$activeTab&msg=" . urlencode($message));
         exit;
@@ -256,7 +269,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
     </head>
     <body>
         <div class="container">
-            
+
             <!-- En-tête avec bouton de déconnexion -->
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h1>Admin - Gestion des énigmes</h1>
@@ -282,7 +295,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
             <!-- ONGLET 1 : RÉSULTATS DES JOUEURS                           -->
             <!-- ========================================================== -->
             <div class="tab-content <?php echo ($activeTab === 'resultats') ? 'active' : ''; ?>" id="resultats">
-                
+
                 <!-- Bouton d'exportation vers Excel (export.php) -->
                 <div style="margin-bottom:10px;">
                     <form method="POST" action="export.php"><button type="submit">Exporter les résultats</button></form>
@@ -291,7 +304,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 <?php if(empty($received)): ?>
                 <p>Aucun résultat enregistré.</p>
                 <?php else: ?>
-                
+
                 <!-- Tableau des résultats géré par DataTables -->
                 <div style="overflow-x: auto; max-width: 100%;">
                     <table id="table-results" class="dataTable">
@@ -316,10 +329,10 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                                 <td><?php echo htmlspecialchars($email,ENT_QUOTES); ?></td>
                                 <td><?php echo htmlspecialchars($data['prenom'] ?? '',ENT_QUOTES); ?></td>
                                 <td><?php echo htmlspecialchars($data['nom'] ?? '',ENT_QUOTES); ?></td>
-                                
+
                                 <?php foreach(array_keys($datas) as $e):
                                 if (in_array($e, $RESERVED_KEYS)) continue;
-                                
+
                                 $val = $data['reponses'][$e]['reponse'] ?? '';
 
                                 // Logique de coloration des réponses (vert = juste, rouge = faux)
@@ -496,30 +509,77 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                         </form>
                     </div>
                 </div>
-
                 <br>
                 
-                <!-- 2.B : OPTIONS GLOBALES DU JEU (ex: 1 seule tentative) -->
-                <form method="POST" class="section" style="padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                    <input type="hidden" name="action" value="update_options">
-                    <input type="hidden" name="active_tab" value="edition">
-                    
-                    <h3 style="margin-top: 0; color: #856404;">⚙️ Options globales du jeu</h3>
-                    
-                    <?php 
-                    $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
-                    ?>
-                    
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; font-weight: bold; color: #dc3545;">
-                        <input type="checkbox" name="une_seule_tentative" value="1" <?php echo $is_single_attempt ? 'checked' : ''; ?> style="width: 18px; height: 18px; cursor: pointer;">
-                        Bloquer les joueurs après 1 seule tentative (même fausse)
-                    </label>
-                    <div style="font-size: 13px; color: #666; margin-top: 5px; margin-left: 28px; margin-bottom: 15px;">
-                        Si décoché, les joueurs peuvent retenter l'énigme autant de fois qu'ils le souhaitent jusqu'à trouver la bonne réponse.
+                <!-- 2.B : OPTIONS GLOBALES -->
+                <!-- ======================================================================== -->
+                <!-- BLOC REGROUPÉ : OPTIONS GLOBALES (GAUCHE) ET ZONE DE DANGER (DROITE)     -->
+                <!-- ======================================================================== -->
+                <div class="section" style="padding: 20px; background: #f4f4f4; border-radius: 8px; border-left: 4px solid #6c757d; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; color: #333; margin-bottom: 20px;">⚙️ Gestion globale du jeu</h3>
+
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+                        <!-- ========================================== -->
+                        <!-- MOITIÉ GAUCHE : Options (Thème Jaune)      -->
+                        <!-- ========================================== -->
+                        <div style="flex: 1; min-width: 300px; background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                            <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
+                                <input type="hidden" name="action" value="update_options">
+                                <input type="hidden" name="active_tab" value="edition">
+                                
+                                <h4 style="margin-top: 0; color: #856404; margin-bottom: 15px;">Règles du jeu</h4>
+                                
+                                <?php 
+                                $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
+                                ?>
+                                
+                                <!-- Zone de contenu (pousse le bouton vers le bas) -->
+                                <div style="flex-grow: 1;">
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #856404;">
+                                        <input type="checkbox" name="une_seule_tentative" value="1" <?php echo $is_single_attempt ? 'checked' : ''; ?> style="width: 18px; height: 18px; cursor: pointer;">
+                                        1 seule tentative par joueur
+                                    </label>
+                                    <div style="font-size: 13px; color: #856404; margin-top: 5px; margin-left: 28px; margin-bottom: 15px; opacity: 0.9;">
+                                        Si coché, les joueurs sont bloqués après une erreur. Sinon, les essais sont illimités jusqu'à trouver la bonne réponse.
+                                    </div>
+                                </div>
+                                
+                                <!-- Bouton jaune -->
+                                <button type="submit" style="background: #ffc107; color: #333; font-weight: bold; width: 100%; border: 1px solid #d39e00; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">
+                                    💾 Enregistrer l'option
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- ========================================== -->
+                        <!-- MOITIÉ DROITE : Zone de danger (Rouge)     -->
+                        <!-- ========================================== -->
+                        <div style="flex: 1; min-width: 300px; background: #fff5f5; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                            <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
+                                <input type="hidden" name="action" value="delete_all_enigmes">
+                                <input type="hidden" name="active_tab" value="edition">
+                                
+                                <h4 style="margin-top: 0; color: #dc3545; margin-bottom: 15px;">⚠️ Zone de danger</h4>
+                                
+                                <!-- Zone de contenu (pousse le bouton vers le bas) -->
+                                <div style="flex-grow: 1;">
+                                    <div style="font-size: 13px; color: #a71d2a; margin-bottom: 15px;">
+                                        Cette action supprimera <b>absolument toutes les énigmes</b> de la grille ci-dessous en un seul clic. <br><br>
+                                        <i>Note : Vos configurations (couleurs, options globales, messages) seront conservées.</i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Bouton rouge -->
+                                <button type="submit" style="background: #dc3545; color: white; font-weight: bold; width: 100%; border: 1px solid #c82333; transition: background 0.2s;" onclick="return confirm('🛑 ATTENTION : Êtes-vous absolument certain de vouloir supprimer TOUTES les énigmes ?\n\nCette action est IRRÉVERSIBLE !');" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+                                    🗑️ Supprimer TOUTES les énigmes
+                                </button>
+                            </form>
+                        </div>
+
                     </div>
-                    
-                    <button type="submit" style="background: #ffc107; color: #333; font-weight: bold;">💾 Enregistrer l'option</button>
-                </form>
+                </div>
+                <br>
 
                 <br>
 
@@ -557,7 +617,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                         <input type="hidden" name="enigme" value="<?php echo htmlspecialchars($nom,ENT_QUOTES); ?>">
                         <input type="hidden" name="active_tab" value="edition">
                         <h3><?php echo htmlspecialchars($nom,ENT_QUOTES); ?></h3>
-                        
+
                         <?php if($token): ?>
                         <p><strong>Token : </strong><?php echo htmlspecialchars($token,ENT_QUOTES); ?></p>
                         <p><strong>URL :</strong><br><a href="<?php echo htmlspecialchars($url,ENT_QUOTES); ?>" target="_blank"><?php echo htmlspecialchars($url,ENT_QUOTES); ?></a></p>
@@ -624,7 +684,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                             <!-- 3.A : Colonne de gauche - Formulaire (Couleurs et Textes) -->
                             <div style="flex: 1; min-width: 300px; background: #d9d9d9; padding: 20px; border-radius: 8px;">
                                 <h4>Couleurs de la page de résultat</h4>
-                                
+
                                 <!-- Génération dynamique de la grille des couleurs via une boucle PHP (code plus propre que dans le 1er onglet) -->
                                 <div class="color-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                                     <?php foreach (['background' => 'Fond de page', 'container_bg' => 'Fond conteneur', 'border_color' => 'Couleur bordures', 'title_color' => 'Couleur titre', 'text_color' => 'Couleur texte'] as $key => $label): ?>
@@ -689,7 +749,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
             <!-- ========================================================== -->
             <div class="tab-content <?php echo ($activeTab === 'datas') ? 'active' : ''; ?>" id="datas">
                 <div class="donnees-box">
-                    
+
                     <!-- Fichier de configuration -->
                     <div class="donnees-left">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -725,7 +785,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
         <!-- ========================================================== -->
         <script>
             $(document).ready(function(){
-                
+
                 // 1. GESTION DES ONGLETS
                 // Alterne l'affichage des onglets en modifiant les classes 'active'
                 $('.tab').click(function(){
@@ -734,7 +794,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                     $('.tab-content').removeClass('active');
                     const tabName = $(this).data('tab');
                     $('#' + tabName).addClass('active');
-                    
+
                     // Modifie l'URL sans recharger la page pour mémoriser l'onglet actif (utile pour la touche F5)
                     const url = new URL(window.location);
                     url.searchParams.set('tab', tabName);
@@ -770,7 +830,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 updatePreview();
 
                 // 5. SYNCHRONISATION COLOR-PICKER <-> CHAMP TEXTE HEXA (Onglet 2)
-                
+
                 // Quand on clique sur la couleur, ça met à jour le texte
                 $('input[type="color"]').on('input', function() {
                     $(this).next('.color-hex').val($(this).val().toUpperCase());
@@ -886,7 +946,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
 
                 // Applique l'arrière-plan global
                 $('#preview-msg-bg').css('background', bg);
-                
+
                 // Applique le style aux 3 blocs de messages
                 $('.preview-msg-container').css({
                     'background': container,
