@@ -740,6 +740,121 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                         </div>
                     </form>
                 </div>
+
+                <!-- ======================================================================== -->
+                <!-- GUIDE DES BALISES HTML (MÉMO DÉPLIANT)                                   -->
+                <!-- ======================================================================== -->
+                <details class="section" style="padding: 20px; background-color: #fcfcfc; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px;">
+
+                    <summary style="font-size: 16px; font-weight: bold; color: #333; cursor: pointer; outline: none; list-style-position: inside;">
+                        💡 Mémo de formatage (Balises HTML) - Cliquez pour déplier
+                    </summary>
+
+                    <div style="margin-top: 15px;">
+                        <p style="margin-bottom: 15px; color: #555; font-size: 14px;">
+                            Comme les textes des messages acceptent le code HTML, voici un rappel des balises utiles que vous pouvez utiliser pour mettre en forme vos textes :
+                        </p>
+
+                        <div style="overflow-x: auto;">
+                            <table class="dataTable" style="text-align: left; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="text-align: left; width: 120px;">Balise</th>
+                                        <th scope="col" style="text-align: left;">Description visuelle</th>
+                                        <th scope="col" style="text-align: left;">Rendu visuel typique</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>&lt;h1&gt;</code> à <code>&lt;h6&gt;</code></td>
+                                        <td>Définissent des titres, de l’intitulé principal aux sous-titres.</td>
+                                        <td>Texte affiché comme titre.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;p&gt;</code></td>
+                                        <td>Crée un paragraphe de texte autonome.</td>
+                                        <td>Bloc de texte.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;br&gt;</code></td>
+                                        <td>Insère un saut de ligne.</td>
+                                        <td>Retour à la ligne.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;hr&gt;</code></td>
+                                        <td>Ajoute une ligne de séparation.</td>
+                                        <td>Ligne horizontale.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;b&gt;</code></td>
+                                        <td>Met du texte en gras.</td>
+                                        <td><b>Gras</b>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;i&gt;</code></td>
+                                        <td>Met du texte en italique.</td>
+                                        <td><i>Italique</i>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;u&gt;</code></td>
+                                        <td>Souligne visuellement le texte.</td>
+                                        <td><u>Souligné</u>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;mark&gt;</code></td>
+                                        <td>Met en évidence une portion de texte.</td>
+                                        <td>Texte <mark>surligné</mark>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;del&gt;</code></td>
+                                        <td>Signale un contenu supprimé ou obsolète.</td>
+                                        <td>Texte <del>barré</del>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;ins&gt;</code></td>
+                                        <td>Signale un contenu ajouté.</td>
+                                        <td>Souvent <ins>souligné</ins>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;sub&gt;</code></td>
+                                        <td>Place le texte en indice.</td>
+                                        <td>Exemple : H<sub>2</sub>O</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;sup&gt;</code></td>
+                                        <td>Place le texte en exposant.</td>
+                                        <td>Exemple : x<sup>2</sup></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;blockquote&gt;</code></td>
+                                        <td>Encadre une citation longue en bloc.</td>
+                                        <td>Bloc souvent indenté.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;q&gt;</code></td>
+                                        <td>Insère une citation courte.</td>
+                                        <td>Citation avec guillemets.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;ul&gt;</code></td>
+                                        <td>Crée une liste non ordonnée.</td>
+                                        <td>Liste à puces.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;ol&gt;</code></td>
+                                        <td>Crée une liste ordonnée.</td>
+                                        <td>Liste numérotée.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>&lt;li&gt;</code></td>
+                                        <td>Représente un élément de liste.</td>
+                                        <td>Ligne avec puce/numéro.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <!-- ========================================================== -->
@@ -985,7 +1100,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 // Colorise le texte standard
                 $('.preview-msg-content').css('color', text);
                 // Cible spécifiquement les balises de titre pour leur donner la bonne couleur
-                $('.preview-msg-content').find('h2, h3').css('color', title);
+                $('.preview-msg-content').find('h1, h2, h3, h4, h5, h6').css('color', title);
             }
 
             // 13. ÉCOUTEURS D'ÉVÉNEMENTS POUR L'ONGLET 3 (MESSAGES)
