@@ -510,77 +510,77 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                     </div>
                 </div>
                 <br>
-                
+
                 <!-- 2.B : OPTIONS GLOBALES -->
                 <!-- ======================================================================== -->
                 <!-- BLOC REGROUPÉ : OPTIONS GLOBALES (GAUCHE) ET ZONE DE DANGER (DROITE)     -->
                 <!-- ======================================================================== -->
                 <div class="section" style="padding: 20px; background: #f4f4f4; border-radius: 8px; border-left: 4px solid #6c757d; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <h3 style="margin-top: 0; color: #333; margin-bottom: 20px;">⚙️ Gestion globale du jeu</h3>
 
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <!-- En-tête avec bouton Plier/Déplier -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; color: #333;">⚙️ Gestion globale du jeu</h3>
+                        <button type="button" id="toggle-global" style="background: #007BFF; border: none; font-size: 18px; cursor: pointer; padding: 8px 12px; transition: background 0.2s, transform 0.3s; color: white; border-radius: 6px;" title="Plier/Déplier" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007BFF'">
+                            ▼
+                        </button>
+                    </div>
 
-                        <!-- ========================================== -->
-                        <!-- MOITIÉ GAUCHE : Options (Thème Jaune)      -->
-                        <!-- ========================================== -->
-                        <div style="flex: 1; min-width: 300px; background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
-                                <input type="hidden" name="action" value="update_options">
-                                <input type="hidden" name="active_tab" value="edition">
-                                
-                                <h4 style="margin-top: 0; color: #856404; margin-bottom: 15px;">Règles du jeu</h4>
-                                
-                                <?php 
-                                $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
-                                ?>
-                                
-                                <!-- Zone de contenu (pousse le bouton vers le bas) -->
-                                <div style="flex-grow: 1;">
-                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #856404;">
-                                        <input type="checkbox" name="une_seule_tentative" value="1" <?php echo $is_single_attempt ? 'checked' : ''; ?> style="width: 18px; height: 18px; cursor: pointer;">
-                                        1 seule tentative par joueur
-                                    </label>
-                                    <div style="font-size: 13px; color: #856404; margin-top: 5px; margin-left: 28px; margin-bottom: 15px; opacity: 0.9;">
-                                        Si coché, les joueurs sont bloqués après une erreur. Sinon, les essais sont illimités jusqu'à trouver la bonne réponse.
+                    <!-- Conteneur pliable -->
+                    <div id="global-panel">
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+
+                            <!-- MOITIÉ GAUCHE : Options (Thème Jaune) -->
+                            <div style="flex: 1; min-width: 300px; background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
+                                    <input type="hidden" name="action" value="update_options">
+                                    <input type="hidden" name="active_tab" value="edition">
+
+                                    <h4 style="margin-top: 0; color: #856404; margin-bottom: 15px;">Règles du jeu</h4>
+
+                                    <?php 
+                                    $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
+                                    ?>
+
+                                    <div style="flex-grow: 1;">
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #856404;">
+                                            <input type="checkbox" name="une_seule_tentative" value="1" <?php echo $is_single_attempt ? 'checked' : ''; ?> style="width: 18px; height: 18px; cursor: pointer;">
+                                            1 seule tentative par joueur
+                                        </label>
+                                        <div style="font-size: 13px; color: #856404; margin-top: 5px; margin-left: 28px; margin-bottom: 15px; opacity: 0.9;">
+                                            Si coché, les joueurs sont bloqués après une erreur. Sinon, les essais sont illimités jusqu'à trouver la bonne réponse.
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Bouton jaune -->
-                                <button type="submit" style="background: #ffc107; color: #333; font-weight: bold; width: 100%; border: 1px solid #d39e00; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">
-                                    💾 Enregistrer l'option
-                                </button>
-                            </form>
-                        </div>
 
-                        <!-- ========================================== -->
-                        <!-- MOITIÉ DROITE : Zone de danger (Rouge)     -->
-                        <!-- ========================================== -->
-                        <div style="flex: 1; min-width: 300px; background: #fff5f5; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                            <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
-                                <input type="hidden" name="action" value="delete_all_enigmes">
-                                <input type="hidden" name="active_tab" value="edition">
-                                
-                                <h4 style="margin-top: 0; color: #dc3545; margin-bottom: 15px;">⚠️ Zone de danger</h4>
-                                
-                                <!-- Zone de contenu (pousse le bouton vers le bas) -->
-                                <div style="flex-grow: 1;">
-                                    <div style="font-size: 13px; color: #a71d2a; margin-bottom: 15px;">
-                                        Cette action supprimera <b>absolument toutes les énigmes</b> de la grille ci-dessous en un seul clic. <br><br>
-                                        <i>Note : Vos configurations (couleurs, options globales, messages) seront conservées.</i>
+                                    <button type="submit" style="background: #ffc107; color: #333; font-weight: bold; width: 100%; border: 1px solid #d39e00; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">
+                                        💾 Enregistrer l'option
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- MOITIÉ DROITE : Zone de danger (Rouge) -->
+                            <div style="flex: 1; min-width: 300px; background: #fff5f5; padding: 20px; border-radius: 8px; border-left: 4px solid #dc3545; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
+                                    <input type="hidden" name="action" value="delete_all_enigmes">
+                                    <input type="hidden" name="active_tab" value="edition">
+
+                                    <h4 style="margin-top: 0; color: #dc3545; margin-bottom: 15px;">⚠️ Zone de danger</h4>
+
+                                    <div style="flex-grow: 1;">
+                                        <div style="font-size: 13px; color: #a71d2a; margin-bottom: 15px;">
+                                            Cette action supprimera <b>absolument toutes les énigmes</b> de la grille ci-dessous en un seul clic. <br><br>
+                                            <i>Note : Vos configurations (couleurs, options globales, messages) seront conservées.</i>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <!-- Bouton rouge -->
-                                <button type="submit" style="background: #dc3545; color: white; font-weight: bold; width: 100%; border: 1px solid #c82333; transition: background 0.2s;" onclick="return confirm('🛑 ATTENTION : Êtes-vous absolument certain de vouloir supprimer TOUTES les énigmes ?\n\nCette action est IRRÉVERSIBLE !');" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
-                                    🗑️ Supprimer TOUTES les énigmes
-                                </button>
-                            </form>
-                        </div>
 
+                                    <button type="submit" style="background: #dc3545; color: white; font-weight: bold; width: 100%; border: 1px solid #c82333; transition: background 0.2s;" onclick="return confirm('🛑 ATTENTION : Êtes-vous absolument certain de vouloir supprimer TOUTES les énigmes ?\n\nCette action est IRRÉVERSIBLE !');" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+                                        🗑️ Supprimer TOUTES les énigmes
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-                <br>
-
                 <br>
 
                 <!-- 2.C : FORMULAIRE D'AJOUT D'UNE NOUVELLE ÉNIGME -->
@@ -826,10 +826,20 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                     $('#toggle-theme').text('▼');
                 }
 
+                // 5. SAUVEGARDE ÉTAT DU PANNEAU GLOBAL
+                const isGlobalCollapsed = localStorage.getItem('global-panel-collapsed') === 'true';
+                if (isGlobalCollapsed) {
+                    $('#global-panel').hide();
+                    $('#toggle-global').text('▲');
+                } else {
+                    $('#global-panel').show();
+                    $('#toggle-global').text('▼');
+                }
+
                 // Initialisation visuelle
                 updatePreview();
 
-                // 5. SYNCHRONISATION COLOR-PICKER <-> CHAMP TEXTE HEXA (Onglet 2)
+                // 6. SYNCHRONISATION COLOR-PICKER <-> CHAMP TEXTE HEXA (Onglet 2)
 
                 // Quand on clique sur la couleur, ça met à jour le texte
                 $('input[type="color"]').on('input', function() {
@@ -854,7 +864,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                     $(this).next('.color-hex').val($(this).val().toUpperCase());
                 });
 
-                // 6. GESTION DU HOVER SUR LE BOUTON D'APERÇU (Onglet 2)
+                // 7. GESTION DU HOVER SUR LE BOUTON D'APERÇU (Onglet 2)
                 $('#preview-button').hover(
                     function() {
                         const hoverColor = $('input[name="theme_enigmes[button_hover]"]').val();
@@ -867,7 +877,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 );
             });
 
-            // 7. ANIMATION DU PLIAGE/DÉPLIAGE DU PANNEAU COULEURS
+            // 8. ANIMATION DU PLIAGE/DÉPLIAGE DU PANNEAU COULEURS
             $('#toggle-theme').click(function() {
                 const isVisible = $('#theme-panel').is(':visible');
 
@@ -882,7 +892,22 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 }
             });
 
-            // 8. FONCTION DE MISE À JOUR DE L'APERÇU DES ÉNIGMES (Onglet 2)
+            // 9. ANIMATION DU PLIAGE/DÉPLIAGE DU PANNEAU GLOBAL
+            $('#toggle-global').click(function() {
+                const isVisible = $('#global-panel').is(':visible');
+
+                if (isVisible) {
+                    $('#global-panel').slideUp(300); // Plie
+                    $(this).text('▲');
+                    localStorage.setItem('global-panel-collapsed', 'true');
+                } else {
+                    $('#global-panel').slideDown(300); // Déplie
+                    $(this).text('▼');
+                    localStorage.setItem('global-panel-collapsed', 'false');
+                }
+            });
+
+            // 10. FONCTION DE MISE À JOUR DE L'APERÇU DES ÉNIGMES (Onglet 2)
             function updatePreview() {
                 // Récupère toutes les valeurs actuelles des sélecteurs
                 const background = $('input[name="theme_enigmes[background]"]').val();
@@ -907,7 +932,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 $('#preview-button').css('background', buttonBg);
             }
 
-            // 9. SÉCURITÉ DE SUPPRESSION (Onglet 4)
+            // 11. SÉCURITÉ DE SUPPRESSION (Onglet 4)
             // Demande une double vérification (Dialogue + Mot de passe) avant de formater un fichier JSON
             function confirmReset(fileType) {
                 // 1ère étape : Boîte de dialogue JS classique
@@ -936,7 +961,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 }
             }
 
-            // 10. FONCTION DE MISE À JOUR DE L'APERÇU DES MESSAGES (Onglet 3)
+            // 12. FONCTION DE MISE À JOUR DE L'APERÇU DES MESSAGES (Onglet 3)
             function updateMsgPreview() {
                 const bg = $('input[name="theme_messages[background]"]').val();
                 const container = $('input[name="theme_messages[container_bg]"]').val();
@@ -965,7 +990,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 $('.preview-msg-content').find('h2, h3').css('color', title);
             }
 
-            // 11. ÉCOUTEURS D'ÉVÉNEMENTS POUR L'ONGLET 3 (MESSAGES)
+            // 13. ÉCOUTEURS D'ÉVÉNEMENTS POUR L'ONGLET 3 (MESSAGES)
             // Relie les champs de couleur, les champs hexa et les zones de texte à la fonction d'aperçu
             $('.msg-color').on('input', function() {
                 $(this).next('.msg-hex').val($(this).val().toUpperCase());
