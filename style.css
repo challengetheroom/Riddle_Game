@@ -198,6 +198,26 @@ td.incorrect {
 
 
 /* ========================================================================
+   CORRECTION DES LISTES DANS LES MESSAGES CENTRÉS (Zone Admin - Onglet 3)
+   ======================================================================== */
+.enigme-container ul, 
+.enigme-container ol,
+.preview-msg-container ul, 
+.preview-msg-container ol {
+    display: inline-block; /* Permet au bloc de se centrer */
+    text-align: left;      /* Aligne le texte et les puces à gauche à l'intérieur du bloc */
+    margin: 15px auto;     /* Espacement au-dessus/en-dessous */
+    padding-left: 25px;    /* Espace pour afficher les puces proprement */
+}
+
+/* Espacement entre les éléments de la liste pour que ce soit plus aéré */
+.enigme-container li, 
+.preview-msg-container li {
+    margin-bottom: 8px;
+}
+
+
+/* ========================================================================
    AFFICHAGE DES DONNÉES BRUTES (Zone Admin - Onglet 4)
    ======================================================================== */
 
