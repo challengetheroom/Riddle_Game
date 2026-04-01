@@ -1,0 +1,41 @@
+# ========================================================================
+# SÉCURITÉ GLOBALE DU DOSSIER D'ADMINISTRATION (SERVEUR DE PRODUCTION)
+# ========================================================================
+
+# --- 1. TRANSMISSION DE L'AUTHENTIFICATION À PHP ---
+
+# SÉCURITÉ SPÉCIFIQUE PRODUCTION (CGI/FastCGI) : 
+# Sur de nombreux serveurs en ligne (contrairement à WAMP), Apache "avale" 
+# le mot de passe tapé par l'utilisateur et ne le transmet pas à PHP par sécurité.
+# Cette ligne force Apache à copier l'en-tête d'autorisation et à l'envoyer à PHP.
+# C'est ce qui permet à votre bouton "Vider les données" de vérifier le mot de passe !
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+
+# --- 2. SECTION AUTHENTIFICATION ---
+
+# Active le mode d'authentification basique (fenêtre pop-up native du navigateur)
+AuthType Basic
+
+# Nom de la zone affiché dans la pop-up de connexion
+AuthName "Zone administrateur"
+
+# CHEMIN ABSOLU DU SERVEUR DE PRODUCTION
+# Contrairement au fichier local (C:/wamp64...), ce chemin est celui de votre 
+# hébergement Linux. Il indique à Apache exactement où trouver le fichier des mots de passe.
+AuthUserFile /home/www/sitesClient/ChallengeTheRoom/JEU/Projets/Riddle_Game/admin/.htpasswd
+
+# N'autorise l'accès qu'aux utilisateurs dont les identifiants sont corrects
+Require valid-user
+
+
+# --- 3. PROTECTION DES FICHIERS SENSIBLES ---
+
+# Cible spécifiquement les fichiers nommés ".htaccess" ou ".htpasswd"
+# pour éviter qu'un robot ou un curieux ne les lise depuis son navigateur.
+<FilesMatch "^(\.htaccess|\.htpasswd)$">
+    
+    # Rejette systématiquement toutes les requêtes web vers ces fichiers
+    Require all denied
+    
+</FilesMatch>

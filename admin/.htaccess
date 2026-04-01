@@ -1,0 +1,37 @@
+# ========================================================================
+# SÉCURITÉ GLOBALE DU DOSSIER D'ADMINISTRATION
+# ========================================================================
+# Ce fichier est lu directement par le serveur web (Apache). Il sert à bloquer 
+# l'accès public au dossier "/admin" avant même que le code PHP ne soit exécuté.
+
+# --- 1. SECTION AUTHENTIFICATION ---
+
+# Type d'authentification : "Basic" déclenche l'apparition de la fenêtre 
+# contextuelle native du navigateur demandant un identifiant et un mot de passe.
+AuthType Basic
+
+# Nom de la zone sécurisée. Ce texte peut s'afficher dans la fenêtre de 
+# connexion selon le navigateur utilisé.
+AuthName "Zone administrateur"
+
+# Chemin ABSOLU vers le fichier contenant les identifiants et mots de passe cryptés.
+# ATTENTION : Ce chemin est actuellement configuré pour l'environnement LOCAL (WAMP).
+# Sur le serveur en ligne, ce chemin devra être mis à jour (via le générateur).
+AuthUserFile "C:/wamp64/www/Riddle_Game/admin/.htpasswd"
+
+# Règle d'accès : Exige que l'utilisateur saisisse des identifiants valides 
+# (qui correspondent à ceux stockés dans le fichier .htpasswd) pour entrer.
+Require valid-user
+
+
+# --- 2. PROTECTION DES FICHIERS SENSIBLES ---
+
+# Empêche un visiteur malveillant de taper l'URL directe du fichier de configuration
+# ou du fichier de mots de passe (ex: monsite.com/admin/.htpasswd) pour le télécharger.
+# La directive FilesMatch utilise une expression régulière (Regex) pour cibler ces 2 fichiers.
+<FilesMatch "^(\.htaccess|\.htpasswd)$">
+
+    # Interdit totalement l'accès depuis l'extérieur à ces fichiers spécifiques.
+    Require all denied
+    
+</FilesMatch>

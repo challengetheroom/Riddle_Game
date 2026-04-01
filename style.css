@@ -1,0 +1,314 @@
+/* ========================================================================
+   GLOBAL (Styles appliqués à toute l'application)
+   ======================================================================== */
+
+/* Reset CSS de base pour éviter les marges invisibles des navigateurs */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+
+/* Style général du corps de la page (Police, fond clair, marge) */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: #f9f9f9; 
+    padding: 20px; 
+    color: #333; 
+}
+
+h1, h2, h3 { 
+    margin-bottom: 15px; 
+    color: #222; 
+}
+
+/* ========================================================================
+   FORMULAIRES & BOUTONS
+   ======================================================================== */
+
+/* Boîte contenant un formulaire */
+form { 
+    background: #e8f0ff; 
+    padding: 15px; 
+    border-radius: 12px; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+    margin-bottom: 20px; 
+}
+
+/* Champs de saisie texte, e-mail et grandes zones de texte */
+input[type="text"], input[type="email"], textarea { 
+    width: 100%; 
+    padding: 10px; 
+    border-radius: 8px; 
+    border: 1px solid #ccc; 
+    margin-top: 5px; 
+    margin-bottom: 10px; 
+    font-size: 16px; 
+}
+
+/* Permet à l'utilisateur d'agrandir un textarea uniquement en hauteur (pas en largeur) */
+textarea { 
+    resize: vertical; 
+}
+
+/* Boutons principaux (Bleu par défaut, modifiable par le PHP côté joueur) */
+button { 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    border: none; 
+    background: #007BFF; 
+    color: #fff; 
+    cursor: pointer; 
+    font-size: 16px; 
+    transition: 0.3s; /* Animation douce au survol */
+}
+
+button:hover { 
+    background: #0056b3; 
+}
+
+/* Espacement entre les groupes de champs dans un formulaire */
+.section { 
+    margin-bottom: 15px; 
+}
+
+label { 
+    display: block; 
+    margin-bottom: 5px; 
+}
+
+
+/* ========================================================================
+   ONGLETS DE NAVIGATION (Zone Admin)
+   ======================================================================== */
+
+/* Bouton d'onglet non sélectionné */
+.tab { 
+    display: inline-block; 
+    padding: 10px 25px; 
+    margin-right: 5px; 
+    cursor: pointer; 
+    background: #e2e2e2; 
+    border-radius: 8px 8px 0 0; /* Bords arrondis uniquement en haut */
+    font-weight: bold; 
+    transition: 0.3s; 
+    border-bottom: 2px solid #a2a2a2;
+}
+
+/* Bouton d'onglet actuellement sélectionné */
+.tab.active { 
+    background: #afcbff; 
+    border-bottom: 2px solid #79a8ff; 
+}
+
+/* Conteneur du contenu d'un onglet (masqué par défaut) */
+.tab-content { 
+    display: none; 
+    border: 1px solid #ccc; 
+    border-radius: 0 12px 12px 12px; 
+    background: #fff; 
+    padding: 15px; 
+    overflow: hidden; 
+}
+
+/* Conteneur du contenu de l'onglet actif (affiché) */
+.tab-content.active { 
+    display: block; 
+}
+
+
+/* ========================================================================
+   MESSAGES DE NOTIFICATION (Zone Admin)
+   ======================================================================== */
+   
+/* Bannière de succès (verte) qui s'affiche après une sauvegarde */
+.message { 
+    padding: 10px 15px; 
+    background: #d4edda; 
+    color: #155724; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    border: 1px solid #c3e6cb; 
+}
+
+
+/* ========================================================================
+   TABLEAU DES RÉSULTATS (DataTables - Zone Admin)
+   ======================================================================== */
+
+table.dataTable { 
+    width: 100% !important; 
+    border-collapse: collapse; 
+    margin-top: 10px; 
+}
+
+table.dataTable thead th { 
+    background: #007BFF; 
+    color: #fff; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+/* Alterne les couleurs de fond des lignes (zébrures) pour faciliter la lecture */
+table.dataTable tbody tr:nth-child(even) { 
+    background: #f2f2f2; 
+}
+
+table.dataTable tbody td { 
+    padding: 8px; 
+}
+
+/* Couleurs spécifiques pour les bonnes/mauvaises réponses dans le tableau */
+td.correct { 
+    background-color: #d4edda; 
+    color: #155724; 
+    font-weight: bold; 
+}
+td.incorrect { 
+    background-color: #f8d7da; 
+    color: #721c24; 
+    font-weight: bold; 
+}
+
+
+/* ========================================================================
+   GRILLE DES ÉNIGMES (Zone Admin - Onglet 2)
+   ======================================================================== */
+
+/* Affiche les blocs d'énigmes sous forme de grille qui s'adapte à l'écran */
+#edition .enigme-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 20px; 
+}
+
+/* Coupe les mots trop longs (comme les URL des tokens) pour ne pas casser la grille */
+.enigme-grid a {
+    word-break: break-all;
+}
+
+#edition .section { 
+    margin-bottom: 0; 
+    padding: 15px; 
+    border: 1px solid #ccc; 
+    border-radius: 12px; 
+    background: #fff; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+}
+
+
+/* ========================================================================
+   AFFICHAGE DES DONNÉES BRUTES (Zone Admin - Onglet 4)
+   ======================================================================== */
+
+/* Conteneur divisant l'écran en deux colonnes */
+.donnees-box { 
+    display: flex; 
+    gap: 20px; 
+}
+
+.donnees-left, .donnees-right { 
+    width: 50%; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.donnees-left h2, .donnees-right h2 { 
+    color: #000; 
+    text-align: center; 
+    margin-bottom: 8px; 
+    background: #fff; 
+    padding: 6px 10px; 
+    border-radius: 6px; 
+}
+
+/* Les zones d'affichage du texte JSON (Façon terminal) */
+.donnees-pre {
+    background: #111;
+    color: #0f0; /* Vert fluo */
+    padding: 12px;
+    border-radius: 8px;
+    white-space: pre-wrap; /* Conserve les sauts de ligne du JSON */
+    overflow: auto; /* Ajoute un ascenseur interne si le texte est trop long */
+    height: 800px; /* Hauteur fixe pour éviter que la page devienne infinie */
+    box-sizing: border-box;
+    font-family: monospace; /* Police à largeur fixe */
+}
+
+
+/* ========================================================================
+   PAGES DU JOUEUR (index.php et save.php publiques)
+   ======================================================================== */
+
+/* Conteneur principal (La "carte" de l'énigme) */
+.enigme-container {
+    max-width: 650px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #b5ceEE;
+    border: 2px solid #2b7cff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    text-align: center; /* Centre les titres et les textes */
+}
+
+/* Force les formulaires du joueur à s'aligner correctement */
+.enigme-container form {
+    text-align: left;
+}
+
+
+/* ========================================================================
+   RESPONSIVE DESIGN (Adaptation aux téléphones et tablettes)
+   ======================================================================== */
+
+/* TABLETTES (Largeur d'écran sous 900px) */
+@media (max-width: 900px) {
+    /* Dans l'éditeur de couleurs, on passe de 2 colonnes (gauche/droite) à 1 seule */
+    #theme-form > div {
+        flex-direction: column !important;
+    }
+    
+    /* Onglet données : On passe datas et received l'un au dessus de l'autre */
+    .donnees-box {
+        flex-direction: column;
+    }
+    .donnees-left, .donnees-right {
+        width: 100%;
+    }
+}
+
+/* SMARTPHONES (Largeur d'écran sous 600px) */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    h1, h2, h3 { font-size: 1.2em; }
+    
+    /* Les boutons prennent toute la largeur sur mobile pour être facilement cliquables */
+    button { width: 100%; margin-bottom: 10px; }
+    
+    /* Les onglets s'empilent au lieu d'être côte à côte */
+    .tab { 
+        padding: 8px 12px; 
+        font-size: 0.9em; 
+        display: block; 
+        margin-bottom: 5px; 
+    }
+    
+    /* Le tableau des résultats devient "scrollable" horizontalement au lieu de déborder */
+    table.dataTable { 
+        font-size: 14px; 
+        overflow-x: auto; 
+        display: block; 
+    }
+    table.dataTable thead th { font-size: 13px; }
+    
+    /* Réduction de la taille de la police dans les formulaires */
+    textarea, input[type="text"], input[type="email"] { 
+        font-size: 14px; 
+    }
+    
+    /* La grille des sélecteurs de couleur passe en 1 seule colonne */
+    .color-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
