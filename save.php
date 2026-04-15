@@ -95,11 +95,25 @@ if (!isset($json[$email])) {
 // 6. LOGIQUE DE JEU ET VÉRIFICATION DE LA RÉPONSE
 // ========================================================================
 
-// 6.A : Chargement des textes de notification personnalisés (ou textes par défaut)
+// 6.A : Chargement des textes de notification
+// Récupération des messages globaux
 $msgs = $datas['messages'] ?? [];
-$msg_deja = $msgs['deja_repondu'] ?? "<h2>Tu as déjà répondu à cette énigme.</h2><br><p>Rendez-vous chez les autres partenaires !</p>";
-$msg_bonne = $msgs['bonne_reponse'] ?? "<h2>Félicitations !</h2><br><p>C'est la bonne réponse !</p>";
-$msg_mauvaise = $msgs['mauvaise_reponse'] ?? "<h2>Oh noooon !</h2><br><p>Désolé, ce n'est pas la bonne réponse.</p>";
+$global_deja = $msgs['deja_repondu'] ?? "<h2>Tu as déjà répondu à cette énigme.</h2><br><p>Rendez-vous chez les autres partenaires !</p>";
+$global_bonne = $msgs['bonne_reponse'] ?? "<h2>Félicitations !</h2><br><p>C'est la bonne réponse !</p>";
+$global_mauvaise = $msgs['mauvaise_reponse'] ?? "<h2>Oh noooon !</h2><br><p>Désolé, ce n'est pas la bonne réponse.</p>";
+
+// Récupération des messages UNIQUES de l'énigme s'ils existent (sinon on prend le global)
+$msg_deja = !empty($datas[$enigme]['messages_uniques']['deja_repondu']) 
+    ? $datas[$enigme]['messages_uniques']['deja_repondu'] 
+    : $global_deja;
+
+$msg_bonne = !empty($datas[$enigme]['messages_uniques']['bonne_reponse']) 
+    ? $datas[$enigme]['messages_uniques']['bonne_reponse'] 
+    : $global_bonne;
+
+$msg_mauvaise = !empty($datas[$enigme]['messages_uniques']['mauvaise_reponse']) 
+    ? $datas[$enigme]['messages_uniques']['mauvaise_reponse'] 
+    : $global_mauvaise;
 
 
 // 6.B : Vérification si le joueur a déjà une réponse enregistrée pour CETTE énigme
@@ -109,7 +123,7 @@ if (isset($json[$email]['reponses'][$enigme])) {
 } else {
     // 6.C : Comparaison de sa réponse avec la/les bonne(s) réponse(s)
     $is_correct = false;
-    
+
     // Cas multi-réponses (tableau séparé par des point-virgules côté admin)
     if (is_array($reponse_correcte)) {
         foreach ($reponse_correcte as $rep) {
@@ -190,7 +204,7 @@ $theme_msg = $datas['theme_messages'] ?? [
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Résultat - <?php echo htmlspecialchars($enigme, ENT_QUOTES); ?></title>
         <link rel="stylesheet" href="style.css">
-        
+
         <!-- Application des couleurs personnalisées par l'administrateur pour la page de résultat -->
         <style>
             body {
