@@ -198,6 +198,11 @@
                             <td>Span ne fait rien, mais permet d'appliquer le parametre style avec une couleur en hexadécimal (#1F87A2) ou par defaut avec style="color: red/green/blue/black...".</td>
                             <td>Le parametre "style" permet <span style="color: red;">d'appliquer une couleur</span>.</td>
                         </tr>
+                        <tr>
+                            <td><code>&lt;img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif"&gt;</code></td>
+                            <td>img permet d'afficher une image</td>
+                            <td>Le parametre src="..." permet de définir la source de l'image (en l'occurrence son url).<br><img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif"></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
