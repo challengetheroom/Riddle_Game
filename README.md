@@ -7,14 +7,15 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 ## ✨ Fonctionnalités Principales
 
 - **Génération par Token :** Chaque énigme possède un identifiant unique (URL sécurisée) empêchant la triche.
+- **QR Codes Automatiques :** Création et sauvegarde automatique des images QR Codes (via l'API QRCode-Monkey) directement dans l'interface administrateur.
 - **Stockage Sécurisé :** Pas de base de données (MySQL). Les données sont stockées dans des fichiers plats (`.txt`) **intégralement chiffrés en AES-256**.
-- **Personnalisation (Marque Blanche) :** L'interface admin permet de changer les couleurs (boutons, fond, textes) et les messages de victoire/défaite en temps réel.
+- **Personnalisation poussée :** Interface admin permettant de changer les couleurs globales. Les messages de victoire/défaite/déjà répondu peuvent être configurés globalement, ou **spécifiquement pour chaque énigme**.
 - **Export Excel :** Génération d'un fichier `.xlsx` des résultats avec coloration automatique des bonnes réponses.
 - **Sécurité Admin :** Espace protégé par `.htaccess` et `.htpasswd` (Authentification HTTP Basic).
 
 ---
 
-## 📂 Architecture du Projet
+## 📂 Architecture du Projet (MVC simplifié)
 
 ```text
 / (Racine publique - Côté Joueur)
@@ -24,12 +25,11 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 ├── /vendor/                  # Dossier Composer (Généré automatiquement, contient PhpSpreadsheet)
 │
 └── /admin/                   # (Espace Administrateur - Protégé)
-    ├── index.php             # Tableau de bord principal (Résultats, Édition, Messages, Données)
-    ├── config.php            # ⚠️ FICHIER CRITIQUE : Clés de chiffrement et environnement
-    ├── export.php            # Script générant le fichier Excel des résultats
-    ├── view_datas.php        # Helper pour déchiffrer et afficher l'onglet "Données"
-    ├── datas.txt             # Fichier crypté contenant les paramètres et les énigmes
-    ├── received.txt          # Fichier crypté contenant les réponses des joueurs
+    ├── index.php             # Chef d'orchestre (Contrôleur principal de l'interface)
+    ├── /core/                # Moteur de l'application (actions.php, config.php, export.php, etc.)
+    ├── /data/                # Bases de données chiffrées (datas.txt et received.txt)
+    ├── /onglets/             # Vues HTML incluses (tab_edition.php, tab_resultats.php, etc.)
+    ├── /QRCodes/             # Images PNG des QR Codes générés automatiquement
     ├── .htaccess             # Règle Apache bloquant l'accès à l'admin
     ├── .htpasswd             # Fichier contenant les mots de passe admin hachés
     │
@@ -43,7 +43,7 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 ## ⚙️ Prérequis
 
 - Serveur Web (Apache recommandé pour la prise en charge native du `.htaccess`).
-- PHP 7.4 ou supérieur (Extensions requises : `openssl`, `zip`, `xml`, `gd`).
+- PHP 7.4 ou supérieur (Extensions requises : `openssl`, `zip`, `xml`, `gd`, `curl`).
 - **Composer** (pour l'installation de la bibliothèque d'export Excel).
 
 ---
@@ -57,7 +57,7 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
    composer install
    ```
    *(Si Composer n'est pas initialisé, lancez : `composer require phpoffice/phpspreadsheet`)*
-3. Modifiez si besoin les clés de sécurité dans `admin/config.php`.
+3. Modifiez si besoin les clés de sécurité dans `admin/core/config.php`.
 
 ### 2. Déploiement en Production (En ligne)
 Le déploiement requiert une attention particulière à cause du `.htaccess` qui utilise des chemins absolus (différents entre votre PC et le serveur).
@@ -72,8 +72,8 @@ Le déploiement requiert une attention particulière à cause du `.htaccess` qui
 ## 🔒 Sécurité et Cryptographie
 
 ### Les clés de chiffrement
-Le fichier `admin/config.php` contient les constantes `$ENCRYPT_KEY` et `$ENCRYPT_IV`. 
-- **Ne perdez jamais ces clés !** Si elles sont modifiées ou perdues, les fichiers `datas.txt` et `received.txt` deviendront définitivement illisibles.
+Le fichier `admin/core/config.php` contient les constantes `$ENCRYPT_KEY` et `$ENCRYPT_IV`. 
+- **Ne perdez jamais ces clés !** Si elles sont modifiées ou perdues, les fichiers du dossier `data/` deviendront définitivement illisibles.
 - Ne transmettez jamais ce fichier publiquement.
 
 ### Vidage des fichiers en production (Problème FastCGI)
@@ -86,8 +86,9 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
 ## 📖 Guide d'utilisation (Pour l'administrateur)
 
-1. **Créer une énigme :** Allez dans l'onglet *Édition*, tapez un nom (ex: `Enigme_Cuisine`) et validez.
-2. **Récupérer le lien :** Un lien contenant un *Token* cryptique (ex: `?k=a1b2c3d4e5f6`) sera généré. Copiez ce lien pour en faire un QR Code (via un générateur en ligne).
+1. **Créer une énigme :** Allez dans l'onglet *Édition des énigmes*, tapez un nom (ex: `Enigme_Cuisine`) et validez.
+2. **Récupérer le QR Code :** Le système génère instantanément l'image du QR Code unique. Cliquez sur la miniature dans la grille pour l'agrandir et la télécharger.
 3. **Configurer les réponses :** Ajoutez le texte de l'énigme et la/les bonne(s) réponse(s). Pour accepter plusieurs réponses, séparez-les par un point-virgule (ex: `Velo; Bicyclette`). La vérification ignore les majuscules et les accents.
-4. **Option "Une seule tentative" :** Dans l'onglet d'édition, vous pouvez cocher la case interdisant au joueur de réessayer s'il se trompe.
-5. **Exporter :** Dans l'onglet *Résultats*, cliquez sur le bouton d'exportation pour télécharger le tableau Excel. Les joueurs ayant trouvé la bonne réponse seront surlignés en vert.
+4. **Messages spécifiques (Optionnel) :** Par défaut, les joueurs voient les messages configurés dans l'onglet *Édition des messages*. Vous pouvez cocher "UNIQUE" sous une énigme pour lui attribuer un message de victoire ou de défaite sur-mesure.
+5. **Option "Une seule tentative" :** Dans l'onglet d'édition, vous pouvez cocher la case interdisant au joueur de réessayer s'il se trompe.
+6. **Exporter :** Dans l'onglet *Résultats*, cliquez sur le bouton d'exportation pour télécharger le tableau Excel. Les joueurs ayant trouvé la bonne réponse seront surlignés en vert.
