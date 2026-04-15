@@ -91,25 +91,25 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 <div class="tab <?php echo ($activeTab === 'datas') ? 'active' : ''; ?>" data-tab="datas">Données</div>
             </div>
 
-                        <!-- ========================================================== -->
+            <!-- ========================================================== -->
             <!-- ONGLET 1 : RÉSULTATS DES JOUEURS                           -->
             <!-- ========================================================== -->
-            <?php include 'onglets/tab_resultats.php'; ?>
+            <?php include 'tabs/tab_resultats.php'; ?>
 
             <!-- ========================================================== -->
             <!-- ONGLET 2 : ÉDITION DES ÉNIGMES                             -->
             <!-- ========================================================== -->
-            <?php include 'onglets/tab_edition.php'; ?>
+            <?php include 'tabs/tab_edition.php'; ?>
 
             <!-- ========================================================== -->
             <!-- ONGLET 3 : ÉDITION DES MESSAGES DE RÉSULTAT                -->
             <!-- ========================================================== -->
-            <?php include 'onglets/tab_messages.php'; ?>
+            <?php include 'tabs/tab_messages.php'; ?>
 
             <!-- ========================================================== -->
             <!-- ONGLET 4 : AFFICHAGE DES DONNÉES BRUTES (DEBUG/SÉCURITÉ)   -->
             <!-- ========================================================== -->
-            <?php include 'onglets/tab_datas.php'; ?>
+            <?php include 'tabs/tab_datas.php'; ?>
         </div>
 
         <!-- ======================================================================== -->
