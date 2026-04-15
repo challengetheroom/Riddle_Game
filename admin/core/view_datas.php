@@ -21,7 +21,8 @@ function getDatasContent() {
     // les variables qui ont été définies à l'extérieur (dans config.php).
     global $ENCRYPT_KEY, $ENCRYPT_IV;
     
-    $filename = "datas.txt";
+    // CORRECTION ICI : Le fichier est dans admin/data/
+    $filename = __DIR__ . "/../data/datas.txt";
     
     // Vérifie d'abord si le fichier existe physiquement sur le serveur
     if (!file_exists($filename)) {
@@ -48,7 +49,8 @@ function getReceivedContent() {
     // Importe les variables globales de cryptage
     global $ENCRYPT_KEY, $ENCRYPT_IV;
     
-    $filename = "received.txt";
+    // CORRECTION ICI : Le fichier est dans admin/data/
+    $filename = __DIR__ . "/../data/received.txt";
     
     // Vérifie si le fichier de résultats existe
     if (!file_exists($filename)) {

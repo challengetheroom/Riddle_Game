@@ -63,15 +63,17 @@ function colLetter($c) {
 
 // On récupère les configurations et les énigmes
 $datas = [];
-if (file_exists('datas.txt')) {
-    $dec = decryptData(file_get_contents('datas.txt'), $ENCRYPT_KEY, $ENCRYPT_IV);
+$datasFile = __DIR__ . '/../data/datas.txt';
+if (file_exists($datasFile)) {
+    $dec = decryptData(file_get_contents($datasFile), $ENCRYPT_KEY, $ENCRYPT_IV);
     $datas = json_decode($dec, true) ?: [];
 }
 
 // On récupère les résultats des joueurs
 $received = [];
-if (file_exists('received.txt')) {
-    $dec = decryptData(file_get_contents('received.txt'), $ENCRYPT_KEY, $ENCRYPT_IV);
+$receivedFile = __DIR__ . '/../data/received.txt';
+if (file_exists($receivedFile)) {
+    $dec = decryptData(file_get_contents($receivedFile), $ENCRYPT_KEY, $ENCRYPT_IV);
     $received = json_decode($dec, true) ?: [];
 }
 
