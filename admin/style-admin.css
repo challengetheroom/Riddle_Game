@@ -1,0 +1,203 @@
+/* ========================================================================
+   STRUCTURE PRINCIPALE DE L'ADMINISTRATION
+   ======================================================================== */
+.container {
+    max-width: 100%;     /* Le conteneur prendra 95% de la largeur de l'écran */
+    width: 100%;        /* Assure que ça s'étire bien */
+    margin: 0px auto;  /* Le "auto" garde le bloc bien centré au milieu */
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* ========================================================================
+   ONGLETS DE NAVIGATION (Zone Admin)
+   ======================================================================== */
+
+/* Conteneur global des onglets : enlève l'espace en dessous */
+.tabs {
+    margin-bottom: 0 !important; /* Force la suppression de l'espace */
+}
+
+/* Bouton d'onglet non sélectionné */
+.tab { 
+    display: inline-block; 
+    padding: 10px 25px; 
+    margin-right: 5px; 
+    cursor: pointer; 
+    background: #e2e2e2; 
+    border-radius: 8px 8px 0 0; /* Arrondi seulement en haut */
+    font-weight: bold; 
+    border: 1px solid #ccc; /* Ajoute une bordure identique au cadre du bas */
+    border-bottom: none; /* Enlève la bordure du bas pour fusionner plus tard */
+    position: relative; 
+    top: 1px; /* Décale légèrement l'onglet vers le bas pour mordre sur la bordure */
+    z-index: 1; /* S'assure que l'onglet passe par-dessus le cadre */
+    color: #555;
+    transition: 0.2s;
+}
+
+/* Bouton d'onglet actuellement sélectionné */
+.tab.active { 
+    background: #fff; /* Même couleur que le fond du .tab-content (blanc) */
+    border-bottom: 1px solid #fff; /* Coupe visuellement la ligne du cadre */
+    color: #007BFF; /* Met le texte en bleu pour le faire ressortir */
+    z-index: 3; /* Le met vraiment tout devant */
+}
+
+/* Conteneur du contenu d'un onglet */
+.tab-content { 
+    display: none !important; 
+    border: 1px solid #ccc; /* La bordure du cadre complet */
+    border-radius: 0 12px 12px 12px; 
+    background: #fff; 
+    padding: 20px; 
+    overflow: hidden; 
+    position: relative; /* Nécessaire pour le z-index */
+    z-index: 2; /* Reste en dessous de l'onglet actif */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Petite ombre légère (optionnelle) */
+}
+
+.tab-content.active { 
+    display: block !important; 
+}
+
+
+/* ========================================================================
+   MESSAGES DE NOTIFICATION (Zone Admin)
+   ======================================================================== */
+   
+/* Bannière de succès (verte) qui s'affiche après une sauvegarde */
+.message { 
+    padding: 10px 15px; 
+    background: #d4edda; 
+    color: #155724; 
+    border-radius: 8px; 
+    margin-bottom: 20px; 
+    border: 1px solid #c3e6cb; 
+}
+
+
+/* ========================================================================
+   TABLEAU DES RÉSULTATS (DataTables - Zone Admin)
+   ======================================================================== */
+
+table.dataTable { 
+    width: 100% !important; 
+    border-collapse: collapse; 
+    margin-top: 10px; 
+}
+
+table.dataTable thead th { 
+    background: #007BFF; 
+    color: #fff; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+/* Alterne les couleurs de fond des lignes (zébrures) pour faciliter la lecture */
+table.dataTable tbody tr:nth-child(even) { 
+    background: #f2f2f2; 
+}
+
+table.dataTable tbody td { 
+    padding: 8px; 
+}
+
+/* Couleurs spécifiques pour les bonnes/mauvaises réponses dans le tableau */
+td.correct { 
+    background-color: #d4edda; 
+    color: #155724; 
+    font-weight: bold; 
+}
+td.incorrect { 
+    background-color: #f8d7da; 
+    color: #721c24; 
+    font-weight: bold; 
+}
+
+
+/* ========================================================================
+   GRILLE DES ÉNIGMES (Zone Admin - Onglet 2)
+   ======================================================================== */
+
+/* Affiche les blocs d'énigmes sous forme de grille qui s'adapte à l'écran */
+#edition .enigme-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 20px; 
+}
+
+/* Coupe les mots trop longs (comme les URL des tokens) pour ne pas casser la grille */
+.enigme-grid a {
+    word-break: break-all;
+}
+
+#edition .section { 
+    margin-bottom: 0; 
+    padding: 15px; 
+    border: 1px solid #ccc; 
+    border-radius: 12px; 
+    background: #fff; 
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+}
+
+
+/* ========================================================================
+   CORRECTION DES LISTES DANS LES MESSAGES CENTRÉS (Zone Admin - Onglet 3)
+   ======================================================================== */
+.enigme-container ul, 
+.enigme-container ol,
+.preview-msg-container ul, 
+.preview-msg-container ol {
+    display: inline-block; /* Permet au bloc de se centrer */
+    text-align: left;      /* Aligne le texte et les puces à gauche à l'intérieur du bloc */
+    margin: 15px auto;     /* Espacement au-dessus/en-dessous */
+    padding-left: 25px;    /* Espace pour afficher les puces proprement */
+}
+
+/* Espacement entre les éléments de la liste pour que ce soit plus aéré */
+.enigme-container li, 
+.preview-msg-container li {
+    margin-bottom: 8px;
+}
+
+
+/* ========================================================================
+   AFFICHAGE DES DONNÉES BRUTES (Zone Admin - Onglet 4)
+   ======================================================================== */
+
+/* Conteneur divisant l'écran en deux colonnes */
+.donnees-box { 
+    display: flex; 
+    gap: 20px; 
+}
+
+.donnees-left, .donnees-right { 
+    width: 50%; 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.donnees-left h2, .donnees-right h2 { 
+    color: #000; 
+    text-align: center; 
+    margin-bottom: 8px; 
+    background: #fff; 
+    padding: 6px 10px; 
+    border-radius: 6px; 
+}
+
+/* Les zones d'affichage du texte JSON (Façon terminal) */
+.donnees-pre {
+    background: #111;
+    color: #0f0; /* Vert fluo */
+    padding: 12px;
+    border-radius: 8px;
+    white-space: pre-wrap; /* Conserve les sauts de ligne du JSON */
+    overflow: auto; /* Ajoute un ascenseur interne si le texte est trop long */
+    height: 800px; /* Hauteur fixe pour éviter que la page devienne infinie */
+    box-sizing: border-box;
+    font-family: monospace; /* Police à largeur fixe */
+}
