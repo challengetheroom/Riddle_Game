@@ -162,6 +162,8 @@
 
                         <?php 
                         $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
+                        // Charge les options d'affichage (tout est coché par défaut)
+                        $fields = $datas['options']['fields'] ?? ['email'=>true, 'nom'=>true, 'prenom'=>true, 'reponse'=>true];
                         ?>
 
                         <div style="flex-grow: 1;">
@@ -172,6 +174,23 @@
                             <div style="font-size: 13px; color: #856404; margin-top: 5px; margin-left: 28px; margin-bottom: 15px; opacity: 0.9;">
                                 Si coché, les joueurs sont bloqués après une erreur. Sinon, les essais sont illimités jusqu'à trouver la bonne réponse.
                             </div>
+
+                            <!-- Ajout des options d'affichage des champs -->
+                            <hr style="border: 0; border-top: 1px solid #ffeeba; margin: 15px 0;">
+                            <h5 style="margin: 0 0 10px 0; color: #856404;">Champs du formulaire joueur :</h5>
+
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
+                                <input type="checkbox" name="field_email" value="1" <?php echo $fields['email'] ? 'checked' : ''; ?>> Afficher l'E-mail
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
+                                <input type="checkbox" name="field_prenom" value="1" <?php echo $fields['prenom'] ? 'checked' : ''; ?>> Afficher le Prénom
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
+                                <input type="checkbox" name="field_nom" value="1" <?php echo $fields['nom'] ? 'checked' : ''; ?>> Afficher le Nom
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 15px;">
+                                <input type="checkbox" name="field_reponse" value="1" <?php echo $fields['reponse'] ? 'checked' : ''; ?>> Afficher la Réponse
+                            </label>
                         </div>
 
                         <button type="submit" style="background: #ffc107; color: #333; font-weight: bold; width: 100%; border: 1px solid #d39e00; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">
@@ -195,7 +214,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" style="background: #dc3545; color: white; font-weight: bold; width: 100%; border: 1px solid #c82333; transition: background 0.2s;" onclick="return confirm('🛑 ATTENTION : Êtes-vous absolument certain de vouloir supprimer TOUTES les énigmes ?\n\nCette action est IRRÉVERSIBLE !');" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+                        <button type="submit" style="background: #dc3545; color: white; font-weight: bold; width: 100%; border: 1px solid #c82333; transition: background 0.2s;" onclick="return confirm('🛑 ATTENTION : Êtes-vous absolument certain de vouloir supprimer TOUTES les énigmes ?\\n\\nCette action est IRRÉVERSIBLE !');" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
                             🗑️ Supprimer TOUTES les énigmes
                         </button>
                     </form>
