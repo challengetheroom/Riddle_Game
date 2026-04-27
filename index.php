@@ -3,7 +3,7 @@
 // 1. INCLUSION DES CONFIGURATIONS DE BASE
 // ========================================================================
 // On charge config.php pour avoir accès aux clés de chiffrement et aux fonctions
-require_once "admin/config.php";
+require_once "admin/core/config.php";
 
 
 // ========================================================================
@@ -23,7 +23,7 @@ $token = $_GET['k'];
 // ========================================================================
 // 3. LECTURE ET DÉCHIFFREMENT DE LA BASE DE DONNÉES
 // ========================================================================
-$file_datas = "admin/datas.txt";
+$file_datas = "admin/data/datas.txt";
 
 // Sécurité : on vérifie que le fichier existe bien sur le serveur
 if (!file_exists($file_datas)) {
@@ -74,112 +74,110 @@ foreach($datas as $nom => $e) {
 // Si après avoir fouillé tout le fichier on n'a rien trouvé, on bloque l'accès.
 // Cela arrive si l'admin supprime l'énigme mais que des QR codes circulent encore.
 if(!$nom_enigme) die("Énigme introuvable pour ce token");
+
+// Récupération des paramètres d'affichage des champs
+$fields = $datas['options']['fields'] ?? ['email'=>true, 'nom'=>true, 'prenom'=>true, 'reponse'=>true];
 ?>
 
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <!-- Affiche le nom de l'énigme dans l'onglet du navigateur -->
-    <title><?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?></title>
-    
-    <!-- Feuille de style de base (la structure, les marges, etc.) -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- ======================================================================== -->
-    <!-- GÉNÉRATION DYNAMIQUE DES COULEURS (CSS) EN FONCTION DU THÈME CHOISI      -->
-    <!-- ======================================================================== -->
-    <style>
-        /* On utilise !important pour forcer le remplacement des couleurs du style.css */
-        body {
-            background: <?php echo htmlspecialchars($theme['background']); ?> !important;
-            color: <?php echo htmlspecialchars($theme['text_color']); ?> !important;
-        }
-        .enigme-container {
-            background: <?php echo htmlspecialchars($theme['container_bg']); ?> !important;
-            border-color: <?php echo htmlspecialchars($theme['border_color']); ?> !important;
-        }
-        .enigme-container h2 {
-            color: <?php echo htmlspecialchars($theme['title_color']); ?> !important;
-        }
-        .enigme-container p {
-            color: <?php echo htmlspecialchars($theme['text_color']); ?> !important;
-        }
-        form {
-            background: <?php echo htmlspecialchars($theme['form_bg']); ?> !important;
-        }
-        button[type="submit"] {
-            background: <?php echo htmlspecialchars($theme['button_bg']); ?> !important;
-        }
-        button[type="submit"]:hover {
-            background: <?php echo htmlspecialchars($theme['button_hover']); ?> !important;
-        }
-        /* Colorise les bordures des champs de texte */
-        input[type="text"], input[type="email"] {
-            border-color: <?php echo htmlspecialchars($theme['border_color']); ?> !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Conteneur principal de l'énigme -->
-    <div class="enigme-container">
-        
-        <!-- Titre et descriptif de l'énigme -->
-        <h2><?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?></h2>
-        <p><?php echo htmlspecialchars($texte_enigme, ENT_QUOTES); ?></p>
-        <br>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Affiche le nom de l'énigme dans l'onglet du navigateur -->
+        <title><?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?></title>
+
+        <!-- Feuille de style de base (la structure, les marges, etc.) -->
+        <link rel="stylesheet" href="style.css">
 
         <!-- ======================================================================== -->
-        <!-- FORMULAIRE DE RÉPONSE (Envoyé vers save.php)                             -->
+        <!-- GÉNÉRATION DYNAMIQUE DES COULEURS (CSS) EN FONCTION DU THÈME CHOISI      -->
         <!-- ======================================================================== -->
-        <form action="save.php" method="POST">
-            
-            <!-- Champs cachés (indispensables pour save.php) -->
-            <!-- Ils permettent de dire discrètement au serveur : "Voici à quelle énigme le joueur a répondu" -->
-            <input type="hidden" name="enigme" value="<?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?>">
-            <input type="hidden" name="token" value="<?php echo htmlspecialchars($token, ENT_QUOTES); ?>">
+        <style>
+            /* On utilise !important pour forcer le remplacement des couleurs du style.css */
+            body {
+                background: <?php echo htmlspecialchars($theme['background']); ?> !important;
+                color: <?php echo htmlspecialchars($theme['text_color']); ?> !important;
+            }
+            .enigme-container {
+                background: <?php echo htmlspecialchars($theme['container_bg']); ?> !important;
+                border-color: <?php echo htmlspecialchars($theme['border_color']); ?> !important;
+            }
+            .enigme-container h2 {
+                color: <?php echo htmlspecialchars($theme['title_color']); ?> !important;
+            }
+            .enigme-container p {
+                color: <?php echo htmlspecialchars($theme['text_color']); ?> !important;
+            }
+            form {
+                background: <?php echo htmlspecialchars($theme['form_bg']); ?> !important;
+            }
+            button[type="submit"] {
+                background: <?php echo htmlspecialchars($theme['button_bg']); ?> !important;
+            }
+            button[type="submit"]:hover {
+                background: <?php echo htmlspecialchars($theme['button_hover']); ?> !important;
+            }
+            /* Colorise les bordures des champs de texte */
+            input[type="text"], input[type="email"] {
+                border-color: <?php echo htmlspecialchars($theme['border_color']); ?> !important;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Conteneur principal de l'énigme -->
+        <div class="enigme-container">
 
-            <!-- Champ : Réponse du joueur -->
-            <div class="section">
-                <label>
-                    Ta réponse <span style="color:red;">*</span> :<br>
-                    <!-- 'required' empêche de valider si le champ est vide -->
-                    <input type="text" name="reponse" placeholder="Votre réponse" required>
-                </label>
-            </div>
+            <!-- Titre et descriptif de l'énigme -->
+            <h2><?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?></h2>
+            <p><?php echo htmlspecialchars($texte_enigme, ENT_QUOTES); ?></p>
+            <br>
 
-            <!-- Champ : Adresse E-mail -->
-            <div class="section">
-                <label>
-                    Ton e-mail <span style="color:red;">*</span> :<br>
-                    <!-- type="email" force la présence d'un '@' sur les mobiles -->
-                    <input type="email" name="email" placeholder="ex : joueur@example.com" required>
-                </label>
-            </div>
+            <!-- ======================================================================== -->
+            <!-- FORMULAIRE DE RÉPONSE (Envoyé vers save.php)                             -->
+            <!-- ======================================================================== -->
+            <form action="save.php" method="POST">
 
-            <!-- Champ : Prénom -->
-            <div class="section">
-                <label>
-                    Ton prénom <span style="color:red;">*</span> :<br>
-                    <input type="text" name="prenom" placeholder="ex : Jean" required>
-                </label>
-            </div>
+                <!-- Champs cachés (indispensables pour save.php) -->
+                <!-- Ils permettent de dire discrètement au serveur : "Voici à quelle énigme le joueur a répondu" -->
+                <input type="hidden" name="enigme" value="<?php echo htmlspecialchars($nom_enigme, ENT_QUOTES); ?>">
+                <input type="hidden" name="token" value="<?php echo htmlspecialchars($token, ENT_QUOTES); ?>">
 
-            <!-- Champ : Nom de famille -->
-            <div class="section">
-                <label>
-                    Ton nom <span style="color:red;">*</span> :<br>
-                    <input type="text" name="nom" placeholder="ex : Dupont" required>
-                </label>
-            </div>
+                <!-- Champ : Réponse -->
+                <?php if ($fields['reponse']): ?>
+                <div class="section">
+                    <label>Votre réponse <span style="color:red;">*</span> :<br><input type="text" name="reponse" placeholder="..." required></label>
+                </div>
+                <?php endif; ?>
 
-            <!-- Bouton de validation -->
-            <button type="submit">Valider</button>
-            
-        </form>
-        
-        <!-- Petite mention pour les astérisques rouges -->
-        <h6><span style="color:red;">*</span> Champ obligatoire</h6>
-    </div>
-</body>
+                <!-- Champ : E-mail -->
+                <?php if ($fields['email']): ?>
+                <div class="section">
+                    <label>E-mail <span style="color:red;">*</span> :<br><input type="email" name="email" placeholder="ex : joueur@example.com" required></label>
+                </div>
+                <?php endif; ?>
+
+                <!-- Champ : Prénom -->
+                <?php if ($fields['prenom']): ?>
+                <div class="section">
+                    <label>Prénom <span style="color:red;">*</span> :<br><input type="text" name="prenom" placeholder="ex : Jean" required></label>
+                </div>
+                <?php endif; ?>
+
+                <!-- Champ : Nom -->
+                <?php if ($fields['nom']): ?>
+                <div class="section">
+                    <label>Nom <span style="color:red;">*</span> :<br><input type="text" name="nom" placeholder="ex : Dupont" required></label>
+                </div>
+                <?php endif; ?>
+
+                <!-- Bouton de validation -->
+                <button type="submit">Valider</button>
+
+            </form>
+
+            <!-- Petite mention pour les astérisques rouges -->
+            <h6><span style="color:red;">*</span> Champ obligatoire</h6>
+        </div>
+    </body>
 </html>
