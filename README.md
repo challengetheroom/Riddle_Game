@@ -10,8 +10,11 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 - **QR Codes Automatiques :** Création et sauvegarde automatique des images QR Codes (via l'API QRCode-Monkey) directement dans l'interface administrateur.
 - **Stockage Sécurisé :** Pas de base de données (MySQL). Les données sont stockées dans des fichiers plats (`.txt`) **intégralement chiffrés en AES-256**.
 - **Personnalisation poussée :** Interface admin permettant de changer les couleurs globales. Les messages de victoire/défaite/déjà répondu peuvent être configurés globalement, ou **spécifiquement pour chaque énigme**.
+- **Atelier de création visuel (WYSIWYG) :** Un onglet dédié ("Bac à sable") intègre l'éditeur *TinyMCE* pour composer facilement les messages (gras, couleurs, images, bordures) et générer le code HTML propre, avec un rendu "Live Preview".
+- **Formulaire modulable & Check-in :** L'administrateur peut activer ou masquer les champs du joueur (E-mail, Nom, Prénom, Réponse). Si la réponse est désactivée, l'énigme devient un simple point de passage (Check-in automatique).
+- **Identification anonymisée :** Si le champ E-mail est désactivé, le système utilise un cookie sécurisé (Player Key) pour identifier le joueur tout au long de son parcours.
 - **Export Excel :** Génération d'un fichier `.xlsx` des résultats avec coloration automatique des bonnes réponses.
-- **Sécurité Admin :** Espace protégé par `.htaccess` et `.htpasswd` (Authentification HTTP Basic).
+- **Sécurité Admin :** Espace protégé par `.htaccess` et `.htpasswd` (Authentification HTTP Basic), et styles CSS d'administration scindés pour éviter les fuites de structure.
 
 ---
 
@@ -26,9 +29,10 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 │
 └── /admin/                   # (Espace Administrateur - Protégé)
     ├── index.php             # Chef d'orchestre (Contrôleur principal de l'interface)
+    ├── style-admin.css       # Feuille de style privée spécifique à l'interface admin
     ├── /core/                # Moteur de l'application (actions.php, config.php, export.php, etc.)
     ├── /data/                # Bases de données chiffrées (datas.txt et received.txt)
-    ├── /onglets/             # Vues HTML incluses (tab_edition.php, tab_resultats.php, etc.)
+    ├── /onglets/             # Vues HTML incluses (tab_edition.php, tab_resultats.php, tab_creation.php)
     ├── /QRCodes/             # Images PNG des QR Codes générés automatiquement
     ├── .htaccess             # Règle Apache bloquant l'accès à l'admin
     ├── .htpasswd             # Fichier contenant les mots de passe admin hachés
@@ -45,6 +49,7 @@ Une application web PHP légère et sécurisée permettant de créer des jeux de
 - Serveur Web (Apache recommandé pour la prise en charge native du `.htaccess`).
 - PHP 7.4 ou supérieur (Extensions requises : `openssl`, `zip`, `xml`, `gd`, `curl`).
 - **Composer** (pour l'installation de la bibliothèque d'export Excel).
+- *Connexion internet requise côté admin pour charger l'éditeur TinyMCE (CDN).*
 
 ---
 
@@ -88,7 +93,9 @@ SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 
 1. **Créer une énigme :** Allez dans l'onglet *Édition des énigmes*, tapez un nom (ex: `Enigme_Cuisine`) et validez.
 2. **Récupérer le QR Code :** Le système génère instantanément l'image du QR Code unique. Cliquez sur la miniature dans la grille pour l'agrandir et la télécharger.
-3. **Configurer les réponses :** Ajoutez le texte de l'énigme et la/les bonne(s) réponse(s). Pour accepter plusieurs réponses, séparez-les par un point-virgule (ex: `Velo; Bicyclette`). La vérification ignore les majuscules et les accents.
-4. **Messages spécifiques (Optionnel) :** Par défaut, les joueurs voient les messages configurés dans l'onglet *Édition des messages*. Vous pouvez cocher "UNIQUE" sous une énigme pour lui attribuer un message de victoire ou de défaite sur-mesure.
-5. **Option "Une seule tentative" :** Dans l'onglet d'édition, vous pouvez cocher la case interdisant au joueur de réessayer s'il se trompe.
-6. **Exporter :** Dans l'onglet *Résultats*, cliquez sur le bouton d'exportation pour télécharger le tableau Excel. Les joueurs ayant trouvé la bonne réponse seront surlignés en vert.
+3. **Configurer le formulaire :** Cochez ou décochez les champs demandés au joueur. (E-mail, Nom, Prénom, Réponse).
+4. **Configurer les réponses :** Ajoutez le texte de l'énigme et la/les bonne(s) réponse(s). Pour accepter plusieurs réponses, séparez-les par un point-virgule (ex: `Velo; Bicyclette`). La vérification ignore les majuscules et les accents.
+5. **Création visuelle des messages :** Allez dans l'onglet *Création de message* pour utiliser l'éditeur visuel. Mettez en forme votre texte, ajoutez des images avec des bordures, puis copiez le code HTML généré pour le coller dans vos énigmes.
+6. **Messages spécifiques (Optionnel) :** Par défaut, les joueurs voient les messages configurés dans l'onglet *Édition des messages*. Vous pouvez cocher "UNIQUE" sous une énigme pour lui attribuer un message de victoire ou de défaite sur-mesure.
+7. **Option "Une seule tentative" :** Dans l'onglet d'édition, vous pouvez cocher la case interdisant au joueur de réessayer s'il se trompe.
+8. **Exporter :** Dans l'onglet *Résultats*, cliquez sur le bouton d'exportation pour télécharger le tableau Excel. Les joueurs ayant trouvé la bonne réponse seront surlignés en vert.
