@@ -1,6 +1,6 @@
 /* ========================================================================
-   GLOBAL (Styles appliqués à toute l'application)
-   ======================================================================== */
+GLOBAL (Styles appliqués à toute l'application)
+======================================================================== */
 
 /* Reset CSS de base pour éviter les marges invisibles des navigateurs */
 * { 
@@ -9,7 +9,7 @@
     padding: 0; 
 }
 
-/* Style général du corps de la page (Police, fond clair, marge) */
+/* Style général du corps de la page */
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     background: #f9f9f9; 
@@ -23,10 +23,9 @@ h1, h2, h3 {
 }
 
 /* ========================================================================
-   FORMULAIRES & BOUTONS
-   ======================================================================== */
+FORMULAIRES & BOUTONS GÉNÉRAUX (Administration)
+======================================================================== */
 
-/* Boîte contenant un formulaire */
 form { 
     background: #e8f0ff; 
     padding: 15px; 
@@ -35,7 +34,6 @@ form {
     margin-bottom: 20px; 
 }
 
-/* Champs de saisie texte, e-mail et grandes zones de texte */
 input[type="text"], input[type="email"], textarea { 
     width: 100%; 
     padding: 10px; 
@@ -46,12 +44,11 @@ input[type="text"], input[type="email"], textarea {
     font-size: 16px; 
 }
 
-/* Permet à l'utilisateur d'agrandir un textarea uniquement en hauteur (pas en largeur) */
 textarea { 
     resize: vertical; 
 }
 
-/* Boutons principaux (Bleu par défaut, modifiable par le PHP côté joueur) */
+/* Boutons classiques (Panel admin) */
 button { 
     padding: 10px 20px; 
     border-radius: 8px; 
@@ -60,29 +57,22 @@ button {
     color: #fff; 
     cursor: pointer; 
     font-size: 16px; 
-    transition: 0.3s; /* Animation douce au survol */
+    transition: 0.3s;
 }
 
 button:hover { 
     background: #0056b3; 
 }
 
-/* Espacement entre les groupes de champs dans un formulaire */
-.section { 
-    margin-bottom: 15px; 
-}
-
-label { 
-    display: block; 
-    margin-bottom: 5px; 
-}
+.section { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; }
 
 
 /* ========================================================================
-   PAGES DU JOUEUR (index.php et save.php publiques)
-   ======================================================================== */
+PAGES DU JOUEUR (Énigmes et Résultats)
+======================================================================== */
 
-/* Conteneur principal (La "carte" de l'énigme) */
+/* Le conteneur principal type "Carte" */
 .enigme-container {
     max-width: 650px;
     margin: 40px auto;
@@ -91,113 +81,138 @@ label {
     border: 2px solid #2b7cff;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    text-align: center; /* Centre les titres et les textes */
+    text-align: center;
 }
 
-/* Force les formulaires du joueur à s'aligner correctement */
 .enigme-container form {
     text-align: left;
 }
 
-
-/* ========================================================================
-   RESPONSIVE DESIGN (Adaptation aux téléphones et tablettes)
-   ======================================================================== */
-
-/* TABLETTES (Largeur d'écran sous 900px) */
-@media (max-width: 900px) {
-    /* Dans l'éditeur de couleurs, on passe de 2 colonnes (gauche/droite) à 1 seule */
-    #theme-form > div {
-        flex-direction: column !important;
-    }
-    
-    /* Onglet données : On passe datas et received l'un au dessus de l'autre */
-    .donnees-box {
-        flex-direction: column;
-    }
-    .donnees-left, .donnees-right {
-        width: 100%;
-    }
+/* --- TYPOGRAPHIE FLUIDE (Titres qui s'adaptent sans Media Query) --- */
+.enigme-container h2,
+.preview-msg-content h2 {
+    font-size: clamp(24px, 5vw, 32px);
+    margin-bottom: 15px;
+    line-height: 1.3;
 }
 
-/* SMARTPHONES (Largeur d'écran sous 600px) */
+.enigme-container h3,
+.preview-msg-content h3 {
+    font-size: clamp(20px, 4vw, 26px);
+    margin-bottom: 20px;
+    line-height: 1.3;
+}
+
+/* --- BOUTON LARGE (Joueur) --- */
+.enigme-container button[type="submit"],
+.preview-msg-content button,
+.preview-msg-content a.button {
+    width: 100%;
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* --- LISTES (Puces et numéros) --- */
+.enigme-container ul, 
+.enigme-container ol,
+.preview-msg-content ul,
+.preview-msg-content ol {
+    list-style-position: inside; 
+    padding-left: 0;
+    max-width: 90%; 
+    margin: 15px auto; 
+    text-align: left;
+}
+
+.enigme-container li,
+.preview-msg-content li {
+    margin-bottom: 8px; 
+    line-height: 1.4;
+    padding-left: 5px; 
+}
+
+
+/* ========================================================================
+RESPONSIVE DESIGN (Adaptation aux différentes tailles d'écran)
+======================================================================== */
+
+/* TABLETTES (Largeur d'écran sous 900px - Admin) */
+@media (max-width: 900px) {
+    #theme-form > div {
+        flex-direction: column !important; /* Maintien du !important car flex inline en admin */
+    }
+    .donnees-box { flex-direction: column; }
+    .donnees-left, .donnees-right { width: 100%; }
+}
+
+/* SMARTPHONES (Largeur d'écran sous 768px) */
 @media (max-width: 768px) {
-    /* 1. NOUVEAU : Supprimer les marges du body pour coller aux bords */
     body { 
         padding: 0; 
         margin: 0; 
     }
-    
-    /* 2. NOUVEAU : Le conteneur prend 100% de l'écran, sans cadre ni coins arrondis */
+
+    /* Le conteneur prend tout l'écran, les attributs écrasent ceux du haut naturellement */
     .enigme-container {
-        margin: 0 !important;       /* Le !important force l'annulation des 40px de la version PC */
-        max-width: 100% !important; /* Annule la limite de largeur de la version PC */
+        margin: 0;       
+        max-width: 100%; 
         border-radius: 0;
-        border: none !important;
-        min-height: 100vh;          /* Force la hauteur minimum à 100% de l'écran */
-        padding: 30px 20px;         /* Espacement intérieur pour que le texte ne touche pas les bords */
-        box-sizing: border-box;     /* Assure que le padding ne dépasse pas la largeur de l'écran */
-        display: flex;              /* Active Flexbox pour pouvoir centrer le contenu */
-        flex-direction: column;     /* Range les éléments de haut en bas */
-        justify-content: center;    /* Centre verticalement tout le contenu */
+        border: none;
+        min-height: 100vh;
+        padding: 30px 20px; 
+        display: flex;             
+        flex-direction: column;     
+        justify-content: center;    
     }
 
-    /* 3. ANCIENNES RÈGLES CONSERVÉES ET OPTIMISÉES */
-    h1, h2, h3 { font-size: 1.2em; }
-    
-    /* Les boutons prennent toute la largeur sur mobile pour être facilement cliquables */
-    button { width: 100%; margin-bottom: 10px; }
-    
-    /* Les onglets s'empilent au lieu d'être côte à côte */
+    /* Réglages pour l'interface Admin sur Mobile */
     .tab { 
         padding: 8px 12px; 
         font-size: 0.9em; 
         display: block; 
         margin-bottom: 5px; 
     }
-    
-    /* Le tableau des résultats devient "scrollable" horizontalement au lieu de déborder */
     table.dataTable { 
         font-size: 14px; 
         overflow-x: auto; 
         display: block; 
     }
     table.dataTable thead th { font-size: 13px; }
-    
-    /* Réduction de la taille de la police dans les formulaires */
     textarea, input[type="text"], input[type="email"] { 
         font-size: 14px; 
     }
-    
-    /* La grille des sélecteurs de couleur passe en 1 seule colonne */
     .color-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr;
     }
 }
 
-/* 4. NOUVEAU : GESTION DES SMARTPHONES EN MODE PAYSAGE (Horizontal) */
+/* SMARTPHONES EN MODE PAYSAGE (Horizontal) */
 @media (max-height: 500px) and (orientation: landscape) {
     body {
-        padding: 0 !important;
+        padding: 0;
         margin: 0;
     }
+    
     .enigme-container {
-        margin: 0 !important;
-        max-width: 100% !important;
+        margin: 0;
+        max-width: 100%;
         border-radius: 0;
-        border: none !important;
+        border: none;
         min-height: 100vh;
         padding: 20px;
-        box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Centre verticalement */
-        align-items: center;     /* Centre horizontalement */
+        justify-content: center;
+        align-items: center;
     }
-    
-    /* En mode paysage, le formulaire peut prendre toute la largeur s'il est au centre */
+
     .enigme-container form {
         width: 100%;
-        max-width: 600px; /* Évite que les champs de texte soient étirés à l'infini sur les longs téléphones */
+        max-width: 600px; 
     }
 }

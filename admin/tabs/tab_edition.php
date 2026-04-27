@@ -7,7 +7,7 @@
     <div class="section" style="padding: 20px;">
         <!-- En-tête dépliable -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0;">🎨 Personnalisation des couleurs</h3>
+            <h3 style="margin: 0;">🎨 Personnalisation du design</h3>
             <button type="button" id="toggle-theme" style="background: #007BFF; border: none; font-size: 18px; cursor: pointer; padding: 8px 12px; transition: background 0.2s, transform 0.3s; color: white; border-radius: 6px;" title="Plier/Déplier" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007BFF'">▼</button>
         </div>
 
@@ -105,13 +105,64 @@
                             </label>
                         </div>
                         <br>
+                        <!-- ========================================================= -->
+                        <!-- 🆕 NOUVEAU BLOC : IMAGE DE FOND ET MIXAGE AVANCÉ          -->
+                        <!-- ========================================================= -->
+                        <div style="grid-column: 1 / -1; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc;">
+                            <h5 style="margin-top: 0; margin-bottom: 15px; color: #1a4f9b;">🖼️ Image de fond du conteneur</h5>
+
+                            <!-- Champ caché pour stocker l'image en Base64 dans le JSON -->
+                            <input type="hidden" name="theme_enigmes[bg_image]" id="bg_image_data" value="<?php echo htmlspecialchars($theme['bg_image'] ?? ''); ?>">
+
+                            <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
+                                <!-- Boutons d'Upload et de Suppression -->
+                                <input type="file" id="bg_image_upload" accept="image/*" style="display: none;">
+                                <button type="button" id="btn_upload_bg" style="background: #28a745; width: auto; padding: 8px 15px; font-size: 13px;">📁 Choisir une image</button>
+                                <button type="button" id="btn_remove_bg" style="background: #dc3545; width: auto; padding: 8px 15px; font-size: 13px; <?php echo empty($theme['bg_image']) ? 'display:none;' : ''; ?>">🗑️ Retirer</button>
+                                <span id="bg_image_status" style="font-size: 12px; color: #666;"><?php echo empty($theme['bg_image']) ? 'Aucune image' : 'Image chargée ✓'; ?></span>
+                            </div>
+
+                            <!-- Grille des réglages avancés (Scale, Pos X, Pos Y, Opacité) -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #e9ecef; padding: 15px; border-radius: 8px;">
+
+                                <!-- Opacité de la couleur (Mixage) -->
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #333;" title="Opacité de la couleur 'Fond conteneur' (0% = Transparent, 100% = Opaque)">Mixage (Opacité %) :</span>
+                                    <input type="number" name="theme_enigmes[bg_opacity]" id="bg_opacity" class="drag-input" step="1" min="0" max="100" value="<?php echo $theme['bg_opacity'] ?? '100'; ?>" style="width: 70px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; cursor: ew-resize;">
+                                </label>
+
+                                <!-- Échelle de l'image (Scale) -->
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #333;">Scale / Taille (%) :</span>
+                                    <input type="number" name="theme_enigmes[bg_scale]" id="bg_scale" class="drag-input" step="5" min="10" max="500" value="<?php echo $theme['bg_scale'] ?? '100'; ?>" style="width: 70px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; cursor: ew-resize;">
+                                </label>
+
+                                <!-- Position X -->
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #333;">Position Horiz. X (%) :</span>
+                                    <input type="number" name="theme_enigmes[bg_pos_x]" id="bg_pos_x" class="drag-input" step="1" value="<?php echo $theme['bg_pos_x'] ?? '50'; ?>" style="width: 70px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; cursor: ew-resize;">
+                                </label>
+
+                                <!-- Position Y -->
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 13px; color: #333;">Position Verti. Y (%) :</span>
+                                    <input type="number" name="theme_enigmes[bg_pos_y]" id="bg_pos_y" class="drag-input" step="1" value="<?php echo $theme['bg_pos_y'] ?? '50'; ?>" style="width: 70px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; cursor: ew-resize;">
+                                </label>
+
+                            </div>
+                            <div style="font-size: 11px; color: #777; margin-top: 8px; text-align: center;">
+                                💡 <i>Astuce : Cliquez sur un nombre et glissez la souris de gauche à droite pour l'ajuster rapidement !</i>
+                            </div>
+                        </div>
+                        <!-- ========================================================= -->
                         <br>
-                        <button type="submit" style="margin-top: 20px; width: 100%;">💾 Enregistrer les couleurs</button>
+                        <button type="submit" style="margin-top: 20px; width: 100%;">💾 Enregistrer le design</button>
                     </div>
 
                     <!-- Panneau droit : Aperçu visuel géré par JavaScript -->
                     <div style="flex: 1; background: #d9d9d9; padding: 20px; border-radius: 8px;">
                         <h4 style="margin-top: 0;">Aperçu en direct</h4>
+                        <br>
 
                         <div id="preview" style="padding: 20px; border-radius: 12px; min-height: 300px;">
                             <div id="preview-container" style="padding: 30px; border-radius: 12px; border: 2px solid; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
@@ -152,7 +203,7 @@
         <div id="global-panel">
             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
 
-                <!-- MOITIÉ GAUCHE : Options (Thème Jaune) -->
+                <!-- MOITIÉ GAUCHE : Options Thème Jaune -->
                 <div style="flex: 1; min-width: 300px; background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <form method="POST" style="display: flex; flex-direction: column; height: 100%;">
                         <input type="hidden" name="action" value="update_options">
@@ -160,11 +211,7 @@
 
                         <h4 style="margin-top: 0; color: #856404; margin-bottom: 15px;">Règles du jeu</h4>
 
-                        <?php 
-                        $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; 
-                        // Charge les options d'affichage (tout est coché par défaut)
-                        $fields = $datas['options']['fields'] ?? ['email'=>true, 'nom'=>true, 'prenom'=>true, 'reponse'=>true];
-                        ?>
+                        <?php $is_single_attempt = $datas['options']['une_seule_tentative'] ?? false; ?>
 
                         <div style="flex-grow: 1;">
                             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #856404;">
@@ -175,26 +222,22 @@
                                 Si coché, les joueurs sont bloqués après une erreur. Sinon, les essais sont illimités jusqu'à trouver la bonne réponse.
                             </div>
 
-                            <!-- Ajout des options d'affichage des champs -->
-                            <hr style="border: 0; border-top: 1px solid #ffeeba; margin: 15px 0;">
-                            <h5 style="margin: 0 0 10px 0; color: #856404;">Champs du formulaire joueur :</h5>
+                            <!-- ========================================================= -->
+                            <!-- 🆕 NOUVEAU : CASE À COCHER POUR L'ALERTE                  -->
+                            <!-- ========================================================= -->
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #856404; margin-top: 15px; border-top: 1px solid #ffeeba; padding-top: 15px;">
+                                <!-- Pas d'attribut 'name' car c'est géré 100% en JS localement -->
+                                <input type="checkbox" id="warn_unsaved" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                                Alerte "Modifications non sauvegardées"
+                            </label>
+                            <div style="font-size: 13px; color: #856404; margin-top: 5px; margin-left: 28px; margin-bottom: 15px; opacity: 0.9;">
+                                Affiche une popup si vous tentez de recharger (F5) ou quitter la page alors que vous avez modifié une couleur ou une énigme sans cliquer sur "Mettre à jour".
+                            </div>
+                            <!-- ========================================================= -->
 
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
-                                <input type="checkbox" name="field_email" value="1" <?php echo $fields['email'] ? 'checked' : ''; ?>> Afficher l'E-mail
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
-                                <input type="checkbox" name="field_prenom" value="1" <?php echo $fields['prenom'] ? 'checked' : ''; ?>> Afficher le Prénom
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 5px;">
-                                <input type="checkbox" name="field_nom" value="1" <?php echo $fields['nom'] ? 'checked' : ''; ?>> Afficher le Nom
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: #856404; margin-bottom: 15px;">
-                                <input type="checkbox" name="field_reponse" value="1" <?php echo $fields['reponse'] ? 'checked' : ''; ?>> Afficher la Réponse
-                            </label>
                         </div>
-
                         <button type="submit" style="background: #ffc107; color: #333; font-weight: bold; width: 100%; border: 1px solid #d39e00; transition: background 0.2s;" onmouseover="this.style.background='#e0a800'" onmouseout="this.style.background='#ffc107'">
-                            💾 Enregistrer l'option
+                            Enregistrer les règles
                         </button>
                     </form>
                 </div>

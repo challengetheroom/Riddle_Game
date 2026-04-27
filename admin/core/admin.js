@@ -1,21 +1,117 @@
-// Fonction qui s'active quand on clique sur une miniature
+// ============================================================================
+// FONCTIONS GLOBALES (Accessibles depuis le HTML via onclick)
+// ============================================================================
+
+// Fonction qui s'active quand on clique sur une miniature (Onglet 2)
 function openQrPopup(imgSrc, enigmeName) {
-    // Change la source de l'image dans la popup
     document.getElementById('qr-modal-img').src = imgSrc;
-    // Modifie le titre
     document.getElementById('qr-modal-title').innerText = 'QR Code : ' + enigmeName;
-    // Prépare le lien de téléchargement avec un joli nom de fichier
+
     const downloadBtn = document.getElementById('qr-modal-download');
     downloadBtn.href = imgSrc;
     downloadBtn.download = 'QRCode_' + enigmeName.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
-    // Affiche la popup
+
     document.getElementById('qr-modal').style.display = 'flex';
 }
 
+// Sécurité de suppression (Onglet 4)
+function confirmReset(fileType) {
+    if (confirm("⚠️ ATTENTION : Voulez-vous vraiment vider totalement le fichier " + fileType + ".txt ?\n\nToutes les données seront perdues. Cette action est IRRÉVERSIBLE.")) {
+        let pwd = prompt("Veuillez entrer le mot de passe administrateur pour confirmer la suppression de " + fileType + ".txt :");
+
+        if (pwd !== null && pwd.trim() !== "") {
+            let form = $('<form>', { method: 'POST', action: 'index.php' });
+            form.append($('<input>', { type: 'hidden', name: 'action', value: 'reset_file' }));
+            form.append($('<input>', { type: 'hidden', name: 'file_type', value: fileType }));
+            form.append($('<input>', { type: 'hidden', name: 'password', value: pwd }));
+            form.append($('<input>', { type: 'hidden', name: 'active_tab', value: 'datas' }));
+
+            $('body').append(form);
+            form.submit();
+        } else if (pwd !== null) {
+            alert("Mot de passe vide, action annulée.");
+        }
+    }
+}
+
+// Fonction de mise à jour de l'aperçu des énigmes (Onglet 2)
+function updatePreview() {
+    const background = $('input[name="theme_enigmes[background]"]').val() || '#f9f9f9';
+    const containerBgHex = $('input[name="theme_enigmes[container_bg]"]').val() || '#b5ceEE';
+    const borderColor = $('input[name="theme_enigmes[border_color]"]').val() || '#2b7cff';
+    const titleColor = $('input[name="theme_enigmes[title_color]"]').val() || '#1a4f9b';
+    const textColor = $('input[name="theme_enigmes[text_color]"]').val() || '#333';
+    const formBg = $('input[name="theme_enigmes[form_bg]"]').val() || '#e8f0ff';
+    const buttonBg = $('input[name="theme_enigmes[button_bg]"]').val() || '#2b7cff';
+
+    // Récupère les nouveaux réglages de l'image de fond
+    const bgImageData = $('#bg_image_data').val();
+    const bgOpacity = $('#bg_opacity').val() || '100';
+    const bgScale = $('#bg_scale').val() || '100';
+    const bgPosX = $('#bg_pos_x').val() || '50';
+    const bgPosY = $('#bg_pos_y').val() || '50';
+
+    $('#preview').css('background', background);
+    $('#preview-title').css('color', titleColor);
+    $('#preview-text').css('color', textColor);
+    $('#preview-form-box').css('background', formBg);
+    $('#preview-input').css('border-color', borderColor);
+    $('#preview-button').css('background', buttonBg);
+
+    // --- LE MIXAGE (BLEND) ---
+    // Conversion de la couleur Hex en RGBA
+    let r = parseInt(containerBgHex.slice(1, 3), 16) || 255;
+    let g = parseInt(containerBgHex.slice(3, 5), 16) || 255;
+    let b = parseInt(containerBgHex.slice(5, 7), 16) || 255;
+    let cssOpacity = bgOpacity / 100;
+    let rgbaColor = `rgba(${r}, ${g}, ${b}, ${cssOpacity})`;
+
+    if (bgImageData) {
+        $('#preview-container').css({
+            'background-image': `linear-gradient(${rgbaColor}, ${rgbaColor}), url('${bgImageData}')`,
+            'background-size': `${bgScale}%`,
+            'background-position': `${bgPosX}% ${bgPosY}%`,
+            'background-repeat': 'no-repeat',
+            'background-color': 'transparent', // Annule le fond solide
+            'border-color': borderColor,
+            'color': textColor
+        });
+    } else {
+        $('#preview-container').css({
+            'background-image': 'none',
+            'background-color': rgbaColor,
+            'border-color': borderColor,
+            'color': textColor
+        });
+    }
+}
+
+// Fonction de mise à jour de l'aperçu des messages (Onglet 3)
+function updateMsgPreview() {
+    const bg = $('input[name="theme_messages[background]"]').val();
+    const container = $('input[name="theme_messages[container_bg]"]').val();
+    const border = $('input[name="theme_messages[border_color]"]').val();
+    const title = $('input[name="theme_messages[title_color]"]').val();
+    const text = $('input[name="theme_messages[text_color]"]').val();
+
+    $('#preview-msg-bg').css('background', bg);
+    $('.preview-msg-container').css({ 'background': container, 'border-color': border, 'color': text });
+
+    $('#preview-bonne-reponse').html($('textarea[name="msg_bonne_reponse"]').val());
+    $('#preview-mauvaise-reponse').html($('textarea[name="msg_mauvaise_reponse"]').val());
+    $('#preview-deja-repondu').html($('textarea[name="msg_deja_repondu"]').val());
+
+    $('.preview-msg-content').css('color', text);
+    $('.preview-msg-content').find('h1, h2, h3, h4, h5, h6').css('color', title);
+}
+
+
+// ============================================================================
+// INITIALISATION AU CHARGEMENT DE LA PAGE (DOM Ready)
+// ============================================================================
 $(document).ready(function(){
 
     // 1. GESTION DES ONGLETS
-    // Alterne l'affichage des onglets en modifiant les classes 'active'
     $('.tab').click(function(){
         $('.tab').removeClass('active');
         $(this).addClass('active');
@@ -23,18 +119,16 @@ $(document).ready(function(){
         const tabName = $(this).data('tab');
         $('#' + tabName).addClass('active');
 
-        // Modifie l'URL sans recharger la page pour mémoriser l'onglet actif (utile pour la touche F5)
         const url = new URL(window.location);
         url.searchParams.set('tab', tabName);
-        url.searchParams.delete('msg'); // Enlève le message de succès de l'URL
+        url.searchParams.delete('msg');
         window.history.replaceState({}, '', url);
     });
 
-    // 2. INITIALISATION DATATABLES (Onglet 1)
+    // 2. INITIALISATION DATATABLES
     $('#table-results').DataTable({ pageLength:10, lengthMenu:[5,10,20,50], order:[] });
 
-    // 3. NETTOYAGE URL
-    // Enlève visuellement le paramètre '?msg=xxx' de la barre d'adresse
+    // 3. NETTOYAGE URL (?msg=)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('msg')) {
         setTimeout(function() {
@@ -44,8 +138,7 @@ $(document).ready(function(){
         }, 100);
     }
 
-    // 4. SAUVEGARDE ÉTAT DU PANNEAU COULEURS
-    // Vérifie dans la mémoire du navigateur (localStorage) si l'admin avait replié le panneau
+    // 4. ANIMATION & SAUVEGARDE ÉTAT DU PANNEAU COULEURS
     const isCollapsed = localStorage.getItem('theme-panel-collapsed') === 'true';
     if (isCollapsed) {
         $('#theme-panel').hide();
@@ -55,7 +148,20 @@ $(document).ready(function(){
         $('#toggle-theme').text('▼');
     }
 
-    // 5. SAUVEGARDE ÉTAT DU PANNEAU GLOBAL
+    $('#toggle-theme').click(function() {
+        const isVisible = $('#theme-panel').is(':visible');
+        if (isVisible) {
+            $('#theme-panel').slideUp(300);
+            $(this).text('▲');
+            localStorage.setItem('theme-panel-collapsed', 'true');
+        } else {
+            $('#theme-panel').slideDown(300);
+            $(this).text('▼');
+            localStorage.setItem('theme-panel-collapsed', 'false');
+        }
+    });
+
+    // 5. ANIMATION & SAUVEGARDE ÉTAT DU PANNEAU GLOBAL
     const isGlobalCollapsed = localStorage.getItem('global-panel-collapsed') === 'true';
     if (isGlobalCollapsed) {
         $('#global-panel').hide();
@@ -65,178 +171,200 @@ $(document).ready(function(){
         $('#toggle-global').text('▼');
     }
 
-    // Initialisation visuelle
-    updatePreview();
-
-    // 6. SYNCHRONISATION COLOR-PICKER <-> CHAMP TEXTE HEXA (Onglet 2)
-
-    // Quand on clique sur la couleur, ça met à jour le texte
-    $('input[type="color"]').on('input', function() {
-        $(this).next('.color-hex').val($(this).val().toUpperCase());
-        updatePreview();
+    $('#toggle-global').click(function() {
+        const isVisible = $('#global-panel').is(':visible');
+        if (isVisible) {
+            $('#global-panel').slideUp(300);
+            $(this).text('▲');
+            localStorage.setItem('global-panel-collapsed', 'true');
+        } else {
+            $('#global-panel').slideDown(300);
+            $(this).text('▼');
+            localStorage.setItem('global-panel-collapsed', 'false');
+        }
     });
 
-    // Quand on tape du texte (ex: #FFFFFF), ça met à jour le sélecteur de couleur
-    $('.color-hex').on('input', function() {
-        const hexValue = $(this).val().toUpperCase();
-        $(this).val(hexValue); // Force majuscule
+    // 6. SYNCHRONISATION COLOR-PICKER <-> CHAMP TEXTE HEXA
+    $('input[type="color"]').on('input', function() {
+        $(this).next('.color-hex, .msg-hex').val($(this).val().toUpperCase());
+        updatePreview();
+        updateMsgPreview();
+    });
 
-        // Vérifie via Regex si c'est un format Hexadécimal valide (# + 6 caractères)
+    $('.color-hex, .msg-hex').on('input', function() {
+        const hexValue = $(this).val().toUpperCase();
+        $(this).val(hexValue);
         if (/^#[0-9A-F]{6}$/i.test(hexValue)) {
             $(this).prev('input[type="color"]').val(hexValue);
             updatePreview();
+            updateMsgPreview();
         }
     });
 
-    // Force l'affichage en majuscule au chargement
     $('input[type="color"]').each(function() {
-        $(this).next('.color-hex').val($(this).val().toUpperCase());
+        $(this).next('.color-hex, .msg-hex').val($(this).val().toUpperCase());
     });
 
-    // 7. GESTION DU HOVER SUR LE BOUTON D'APERÇU (Onglet 2)
+    // 7. GESTION DU HOVER SUR LE BOUTON D'APERÇU
     $('#preview-button').hover(
-        function() {
-            const hoverColor = $('input[name="theme_enigmes[button_hover]"]').val();
-            $(this).css('background', hoverColor);
-        },
-        function() {
-            const normalColor = $('input[name="theme_enigmes[button_bg]"]').val();
-            $(this).css('background', normalColor);
-        }
+        function() { $(this).css('background', $('input[name="theme_enigmes[button_hover]"]').val()); },
+        function() { $(this).css('background', $('input[name="theme_enigmes[button_bg]"]').val()); }
     );
-});
 
-// 8. ANIMATION DU PLIAGE/DÉPLIAGE DU PANNEAU COULEURS
-$('#toggle-theme').click(function() {
-    const isVisible = $('#theme-panel').is(':visible');
-
-    if (isVisible) {
-        $('#theme-panel').slideUp(300); // Animation vers le haut
-        $(this).text('▲');
-        localStorage.setItem('theme-panel-collapsed', 'true');
-    } else {
-        $('#theme-panel').slideDown(300); // Animation vers le bas
-        $(this).text('▼');
-        localStorage.setItem('theme-panel-collapsed', 'false');
-    }
-});
-
-// 9. ANIMATION DU PLIAGE/DÉPLIAGE DU PANNEAU GLOBAL
-$('#toggle-global').click(function() {
-    const isVisible = $('#global-panel').is(':visible');
-
-    if (isVisible) {
-        $('#global-panel').slideUp(300); // Plie
-        $(this).text('▲');
-        localStorage.setItem('global-panel-collapsed', 'true');
-    } else {
-        $('#global-panel').slideDown(300); // Déplie
-        $(this).text('▼');
-        localStorage.setItem('global-panel-collapsed', 'false');
-    }
-});
-
-// 10. FONCTION DE MISE À JOUR DE L'APERÇU DES ÉNIGMES (Onglet 2)
-function updatePreview() {
-    // Récupère toutes les valeurs actuelles des sélecteurs
-    const background = $('input[name="theme_enigmes[background]"]').val();
-    const containerBg = $('input[name="theme_enigmes[container_bg]"]').val();
-    const borderColor = $('input[name="theme_enigmes[border_color]"]').val();
-    const titleColor = $('input[name="theme_enigmes[title_color]"]').val();
-    const textColor = $('input[name="theme_enigmes[text_color]"]').val();
-    const formBg = $('input[name="theme_enigmes[form_bg]"]').val();
-    const buttonBg = $('input[name="theme_enigmes[button_bg]"]').val();
-
-    // Applique les styles CSS en direct
-    $('#preview').css('background', background);
-    $('#preview-container').css({
-        'background': containerBg,
-        'border-color': borderColor,
-        'color': textColor
-    });
-    $('#preview-title').css('color', titleColor);
-    $('#preview-text').css('color', textColor);
-    $('#preview-form-box').css('background', formBg);
-    $('#preview-input').css('border-color', borderColor);
-    $('#preview-button').css('background', buttonBg);
-}
-
-// 11. SÉCURITÉ DE SUPPRESSION (Onglet 4)
-// Demande une double vérification (Dialogue + Mot de passe) avant de formater un fichier JSON
-function confirmReset(fileType) {
-    // 1ère étape : Boîte de dialogue JS classique
-    if (confirm("⚠️ ATTENTION : Voulez-vous vraiment vider totalement le fichier " + fileType + ".txt ?\n\nToutes les données seront perdues. Cette action est IRRÉVERSIBLE.")) {
-
-        // 2ème étape : Fenêtre de saisie (Prompt)
-        let pwd = prompt("Veuillez entrer le mot de passe administrateur pour confirmer la suppression de " + fileType + ".txt :");
-
-        if (pwd !== null && pwd.trim() !== "") {
-            // Génère un formulaire caché en HTML pour poster les données vers PHP
-            let form = $('<form>', {
-                method: 'POST',
-                action: 'index.php'
-            });
-            form.append($('<input>', { type: 'hidden', name: 'action', value: 'reset_file' }));
-            form.append($('<input>', { type: 'hidden', name: 'file_type', value: fileType }));
-            form.append($('<input>', { type: 'hidden', name: 'password', value: pwd }));
-            form.append($('<input>', { type: 'hidden', name: 'active_tab', value: 'datas' }));
-
-            // Ajoute le formulaire au corps de la page et l'envoie automatiquement
-            $('body').append(form);
-            form.submit();
-        } else if (pwd !== null) {
-            alert("Mot de passe vide, action annulée.");
-        }
-    }
-}
-
-// 12. FONCTION DE MISE À JOUR DE L'APERÇU DES MESSAGES (Onglet 3)
-function updateMsgPreview() {
-    const bg = $('input[name="theme_messages[background]"]').val();
-    const container = $('input[name="theme_messages[container_bg]"]').val();
-    const border = $('input[name="theme_messages[border_color]"]').val();
-    const title = $('input[name="theme_messages[title_color]"]').val();
-    const text = $('input[name="theme_messages[text_color]"]').val();
-
-    // Applique l'arrière-plan global
-    $('#preview-msg-bg').css('background', bg);
-
-    // Applique le style aux 3 blocs de messages
-    $('.preview-msg-container').css({
-        'background': container,
-        'border-color': border,
-        'color': text
-    });
-
-    // Copie le texte (HTML) tapé dans les <textarea> vers les blocs d'aperçu
-    $('#preview-bonne-reponse').html($('textarea[name="msg_bonne_reponse"]').val());
-    $('#preview-mauvaise-reponse').html($('textarea[name="msg_mauvaise_reponse"]').val());
-    $('#preview-deja-repondu').html($('textarea[name="msg_deja_repondu"]').val());
-
-    // Colorise le texte standard
-    $('.preview-msg-content').css('color', text);
-    // Cible spécifiquement les balises de titre pour leur donner la bonne couleur
-    $('.preview-msg-content').find('h1, h2, h3, h4, h5, h6').css('color', title);
-}
-
-// 13. ÉCOUTEURS D'ÉVÉNEMENTS POUR L'ONGLET 3 (MESSAGES)
-// Relie les champs de couleur, les champs hexa et les zones de texte à la fonction d'aperçu
-$('.msg-color').on('input', function() {
-    $(this).next('.msg-hex').val($(this).val().toUpperCase());
-    updateMsgPreview();
-});
-$('.msg-hex').on('input', function() {
-    const hexValue = $(this).val().toUpperCase();
-    $(this).val(hexValue);
-    if (/^#[0-9A-F]{6}$/i.test(hexValue)) {
-        $(this).prev('input[type="color"]').val(hexValue);
+    // 8. ÉCOUTEURS DES MESSAGES (Onglet 3)
+    $('.msg-input').on('input', function() {
         updateMsgPreview();
-    }
-});
+    });
 
-$('.msg-input').on('input', function() {
+    // ========================================================================
+    // 🆕 GESTION DE L'IMAGE DE FOND ET COMPRESSION
+    // ========================================================================
+    $('#btn_upload_bg').click(function() {
+        $('#bg_image_upload').click();
+    });
+
+    $('#bg_image_upload').change(function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        $('#bg_image_status').text('Compression... ⏳').css('color', '#ff9900');
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const MAX_SIZE = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height && width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                } else if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const compressedBase64 = canvas.toDataURL('image/webp', 0.7);
+                $('#bg_image_data').val(compressedBase64);
+
+                $('#bg_image_status').text('Image chargée ✓').css('color', '#28a745');
+                $('#btn_remove_bg').show();
+                updatePreview();
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $('#btn_remove_bg').click(function() {
+        $('#bg_image_data').val('');
+        $('#bg_image_upload').val('');
+        $('#bg_image_status').text('Aucune image').css('color', '#666');
+        $(this).hide();
+        updatePreview();
+    });
+
+    // ========================================================================
+    // 🆕 DRAG-TO-CHANGE (Cliquer-Glisser sur les valeurs)
+    // ========================================================================
+    let isDragging = false;
+    let startX = 0;
+    let startValue = 0;
+    let currentInput = null;
+
+    $('.drag-input').mousedown(function(e) {
+        isDragging = true;
+        startX = e.pageX;
+        currentInput = $(this);
+        startValue = parseFloat(currentInput.val()) || 0;
+        $('body').css('cursor', 'ew-resize');
+        e.preventDefault();
+    });
+
+    $(document).mousemove(function(e) {
+        if (!isDragging || !currentInput) return;
+
+        const diff = e.pageX - startX;
+        const step = parseFloat(currentInput.attr('step')) || 1;
+        const sensitivity = 0.5;
+
+        let newValue = startValue + (diff * sensitivity);
+        const min = parseFloat(currentInput.attr('min'));
+        const max = parseFloat(currentInput.attr('max'));
+
+        if (!isNaN(min) && newValue < min) newValue = min;
+        if (!isNaN(max) && newValue > max) newValue = max;
+
+        if (step < 1) {
+            currentInput.val(newValue.toFixed(1));
+        } else {
+            currentInput.val(Math.round(newValue));
+        }
+        updatePreview();
+    });
+
+    $(document).mouseup(function() {
+        if (isDragging) {
+            isDragging = false;
+            currentInput = null;
+            $('body').css('cursor', 'default');
+        }
+    });
+
+    $('.drag-input').on('input change', function() {
+        updatePreview();
+    });
+
+    // Lancement visuel initial
+    updatePreview();
     updateMsgPreview();
-});
 
-// Lancement initial de l'aperçu
-updateMsgPreview();
+    // ========================================================================
+    // 🆕 SÉCURITÉ : ALERTE SI MODIFICATIONS NON SAUVEGARDÉES (F5 / Quitter)
+    // ========================================================================
+    let isDirty = false; // Variable qui retient si on a touché à quelque chose
+
+    // 1. On écoute TOUS les champs de TOUS les formulaires du panneau d'administration
+    $('input, textarea, select').on('input change', function() {
+        // Exceptions : on ignore les clics sur les boutons des onglets, les champs cachés, et la case d'alerte
+        const isTabButton = $(this).closest('.tabs').length > 0;
+        const isHidden = $(this).attr('type') === 'hidden';
+        const isWarnCheckbox = $(this).attr('id') === 'warn_unsaved';
+
+        if (!isTabButton && !isHidden && !isWarnCheckbox) {
+            isDirty = true;
+        }
+    });
+
+    // 2. Si on clique sur un vrai bouton de sauvegarde (form submit), on annule l'alerte
+    $('form').on('submit', function() {
+        isDirty = false;
+    });
+
+    // 3. Gestion de l'état de la case à cocher (mémorisé dans le navigateur)
+    const warnEnabled = localStorage.getItem('warn_unsaved_changes') !== 'false'; // true par défaut
+    $('#warn_unsaved').prop('checked', warnEnabled);
+
+    $('#warn_unsaved').change(function() {
+        localStorage.setItem('warn_unsaved_changes', $(this).is(':checked'));
+    });
+
+    // 4. L'événement natif du navigateur pour bloquer le rechargement
+    window.addEventListener('beforeunload', function(e) {
+        const isWarnActive = $('#warn_unsaved').is(':checked');
+
+        if (isDirty && isWarnActive) {
+            // Ces deux lignes sont requises pour forcer Chrome/Firefox/Edge à afficher la popup
+            e.preventDefault(); 
+            e.returnValue = ''; 
+        }
+    });
+
+}); // Fin du $(document).ready

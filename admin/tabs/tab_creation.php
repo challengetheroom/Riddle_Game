@@ -3,7 +3,7 @@
 <!-- ========================================================== -->
 <div class="tab-content <?php echo ($activeTab === 'creation') ? 'active' : ''; ?>" id="creation">
     <div class="section" style="padding: 20px;">
-        <h3 style="margin-top: 0;">🎨 Atelier de Création de Message</h3>
+        <h3 style="margin-top: 0;">💬 Atelier de Création de Message</h3>
         <p style="color: #555; margin-bottom: 20px;">
             Utilisez cet éditeur visuel pour composer votre message. L'aperçu à droite se met à jour en temps réel avec les couleurs de votre thème actuel.<br>
             Une fois terminé, cliquez sur le bouton en bas pour obtenir le code HTML à copier dans vos énigmes !

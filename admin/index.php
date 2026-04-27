@@ -93,6 +93,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 <div class="tab <?php echo ($activeTab === 'edition') ? 'active' : ''; ?>" data-tab="edition">Édition des énigmes</div>
                 <div class="tab <?php echo ($activeTab === 'messages') ? 'active' : ''; ?>" data-tab="messages">Édition des messages</div>
                 <div class="tab <?php echo ($activeTab === 'creation') ? 'active' : ''; ?>" data-tab="creation">Création de message</div>
+                <div class="tab <?php echo ($activeTab === 'profils') ? 'active' : ''; ?>" data-tab="profils">Profils</div>
                 <div class="tab <?php echo ($activeTab === 'datas') ? 'active' : ''; ?>" data-tab="datas">Données</div>
             </div>
 
@@ -115,6 +116,11 @@ $activeTab = $_GET['tab'] ?? 'resultats';
             <!-- ONGLET NOUVEAU : CRÉATION DE MESSAGE (Bac à sable)         -->
             <!-- ========================================================== -->
             <?php include 'tabs/tab_creation.php'; ?>
+
+            <!-- ========================================================== -->
+            <!-- ONGLET : GESTION DES PROFILS (Sauvegardes)                 -->
+            <!-- ========================================================== -->
+            <?php include 'tabs/tab_profils.php'; ?>
 
             <!-- ========================================================== -->
             <!-- ONGLET 4 : AFFICHAGE DES DONNÉES BRUTES (DEBUG/SÉCURITÉ)   -->
