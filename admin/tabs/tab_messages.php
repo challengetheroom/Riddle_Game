@@ -199,9 +199,9 @@
                             <td>Le parametre "style" permet <span style="color: red;">d'appliquer une couleur</span>.</td>
                         </tr>
                         <tr>
-                            <td><code>&lt;img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif"&gt;</code></td>
+                            <td><code>&lt;img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif" style="width: 80px; height: 80px; border: 1px solid #ccc; border-radius: 8px;"&gt;</code></td>
                             <td>img permet d'afficher une image</td>
-                            <td>Le parametre src="..." permet de définir la source de l'image (en l'occurrence son url).<br><img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif"></td>
+                            <td><p>Le parametre src="..." permet de définir la source de l'image (en l'occurrence son url).<br><img src="https://planet-terre.ens-lyon.fr/objets/Images/volcanisme-systeme-solaire/ganymede-br.gif" style="width: 80px; height: 80px; border: 1px solid #ccc; border-radius: 8px;"></p><p>Tandis que style="..." permet de définir la taile de l'image et ses bords.</p></td>
                         </tr>
                     </tbody>
                 </table>
