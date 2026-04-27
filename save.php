@@ -2,7 +2,7 @@
 // ========================================================================
 // 1. INITIALISATION ET VÉRIFICATION DE LA REQUÊTE
 // ========================================================================
-require_once __DIR__ . "/admin/config.php"; // Charge les clés de cryptage
+require_once __DIR__ . "/admin/core/config.php"; // Charge les clés de cryptage
 date_default_timezone_set('Europe/Paris');  // Règle le fuseau horaire
 
 // SÉCURITÉ : Empêche un accès direct à cette page par l'URL (en tapant save.php).
@@ -11,8 +11,27 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     die("Erreur : méthode invalide.");
 }
 
+
 // ========================================================================
-// 2. RÉCUPÉRATION ET NETTOYAGE DES DONNÉES DU FORMULAIRE
+// 2. LECTURE DES DONNÉES ET VÉRIFICATION DU TOKEN
+// ========================================================================
+$datasFile = __DIR__ . "/admin/data/datas.txt";
+$datas = json_decode(decryptData(file_get_contents($datasFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
+
+$enigme  = $_POST["enigme"] ?? '';
+$token   = $_POST["token"] ?? '';
+
+// Sécurité : On vérifie que le token est le bon
+if (!isset($datas[$enigme]['meta']['token']) || $datas[$enigme]['meta']['token'] !== $token) {
+    die("Erreur : token invalide pour cette énigme");
+}
+
+// On récupère l'état des champs exigés (tout est vrai par défaut)
+$fields = $datas['options']['fields'] ?? ['email'=>true, 'nom'=>true, 'prenom'=>true, 'reponse'=>true];
+
+
+// ========================================================================
+// 3. RÉCUPÉRATION DU FORMULAIRE ET VÉRIFICATION
 // ========================================================================
 // On récupère les données envoyées et on utilise trim() pour enlever 
 // les espaces invisibles tapés par erreur au début ou à la fin.
@@ -20,45 +39,61 @@ $email   = trim($_POST["email"] ?? '');
 $reponse = trim($_POST["reponse"] ?? '');
 $prenom  = trim($_POST["prenom"] ?? '');
 $nom     = trim($_POST["nom"] ?? '');
-$enigme  = $_POST["enigme"] ?? '';
-$token   = $_POST["token"] ?? '';
 
-// Vérifie que tous les champs obligatoires ont bien été remplis
-if (!$email || !$reponse || !$prenom || !$nom || !$enigme || !$token) {
-    die("Erreur : informations manquantes.");
-}
-
-// Vérifie que l'adresse e-mail a un format valide (ex: contient un @ et un point)
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    die("Erreur : adresse e-mail invalide.");
-}
+// Vérification stricte uniquement pour les champs activés par l'admin
+if ($fields['email'] && !$email) die("Erreur : adresse e-mail manquante.");
+if ($fields['email'] && !filter_var($email, FILTER_VALIDATE_EMAIL)) die("Erreur : adresse e-mail invalide.");
+if ($fields['reponse'] && !$reponse) die("Erreur : réponse manquante.");
+if ($fields['prenom'] && !$prenom) die("Erreur : prénom manquant.");
+if ($fields['nom'] && !$nom) die("Erreur : nom manquant.");
 
 
 // ========================================================================
-// 3. VÉRIFICATION DU TOKEN ET DE L'ÉNIGME (SÉCURITÉ)
+// 4. IDENTIFICATION DU JOUEUR (Le "Player Key")
 // ========================================================================
-$datasFile = __DIR__ . "/admin/datas.txt";
-
-// Lecture et déchiffrement du fichier contenant la configuration et les énigmes
-$datas = json_decode(decryptData(file_get_contents($datasFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
-
-// On vérifie que le token envoyé par le formulaire correspond bien 
-// au token officiel enregistré pour cette énigme spécifique.
-// Cela empêche un petit malin de trafiquer le code HTML pour valider une autre énigme.
-if (!isset($datas[$enigme]['meta']['token']) || $datas[$enigme]['meta']['token'] !== $token) {
-    die("Erreur : token invalide pour cette énigme");
+// Si l'e-mail est activé, on s'en sert comme identifiant principal fiable.
+// Sinon, on génère un identifiant anonyme stocké dans un cookie (valable 1 an).
+if ($fields['email']) {
+    $player_key = $email;
+} else {
+    if (isset($_COOKIE['riddle_player_id'])) {
+        $player_key = $_COOKIE['riddle_player_id'];
+    } else {
+        $player_key = 'Joueur_' . substr(md5(uniqid()), 0, 8);
+        setcookie('riddle_player_id', $player_key, time() + 31536000, '/');
+    }
 }
 
 
 // ========================================================================
-// 4. PRÉPARATION DE LA COMPARAISON DES RÉPONSES
+// 5. LECTURE DES RÉSULTATS EXISTANTS ET INITIALISATION DU PROFIL
+// ========================================================================
+$file = __DIR__ . "/admin/data/received.txt";
+if (file_exists($file)) {
+    $json = json_decode(decryptData(file_get_contents($file), $ENCRYPT_KEY, $ENCRYPT_IV), true);
+    if (!is_array($json)) $json = [];
+} else {
+    $json = []; // Si le fichier n'existe pas encore
+}
+
+// Si le joueur n'a jamais joué, on crée son profil avec les infos fournies
+if (!isset($json[$player_key])) {
+    $json[$player_key] = [
+        'prenom' => $prenom ?: 'Anonyme', 
+        'nom' => $nom ?: '', 
+        'reponses' => []
+    ];
+}
+
+
+// ========================================================================
+// 6. PRÉPARATION DE LA COMPARAISON DES RÉPONSES
 // ========================================================================
 // Récupération de la bonne réponse définie par l'admin
 $reponse_correcte = $datas[$enigme]['reponse_correcte'] ?? '';
 
 /**
- * Fonction de normalisation (déjà vue dans les autres fichiers)
- * Convertit le texte pour ignorer les majuscules et les accents lors de la comparaison.
+ * Fonction de normalisation (Convertit le texte pour ignorer majuscules/accents)
  */
 function normalizeString($str) {
     $str = trim($str);
@@ -75,28 +110,10 @@ $reponse_normalized = normalizeString($reponse);
 
 
 // ========================================================================
-// 5. LECTURE DES RÉSULTATS EXISTANTS (received.txt)
-// ========================================================================
-$file = __DIR__ . "/admin/received.txt";
-if (file_exists($file)) {
-    $json = json_decode(decryptData(file_get_contents($file), $ENCRYPT_KEY, $ENCRYPT_IV), true);
-    if (!is_array($json)) $json = [];
-} else {
-    $json = []; // Si le fichier n'existe pas encore (1er joueur), on crée un tableau vide
-}
-
-// Si le joueur (identifié par son email) n'a jamais joué à aucune énigme, on crée son profil
-if (!isset($json[$email])) {
-    $json[$email] = ['prenom' => $prenom, 'nom' => $nom, 'reponses' => []];
-}
-
-
-// ========================================================================
-// 6. LOGIQUE DE JEU ET VÉRIFICATION DE LA RÉPONSE
+// 7. LOGIQUE DE JEU ET VÉRIFICATION
 // ========================================================================
 
-// 6.A : Chargement des textes de notification
-// Récupération des messages globaux
+// 7.A : Chargement des textes de notification personnalisés (ou textes par défaut)
 $msgs = $datas['messages'] ?? [];
 $global_deja = $msgs['deja_repondu'] ?? "<h2>Tu as déjà répondu à cette énigme.</h2><br><p>Rendez-vous chez les autres partenaires !</p>";
 $global_bonne = $msgs['bonne_reponse'] ?? "<h2>Félicitations !</h2><br><p>C'est la bonne réponse !</p>";
@@ -116,37 +133,43 @@ $msg_mauvaise = !empty($datas[$enigme]['messages_uniques']['mauvaise_reponse'])
     : $global_mauvaise;
 
 
-// 6.B : Vérification si le joueur a déjà une réponse enregistrée pour CETTE énigme
-if (isset($json[$email]['reponses'][$enigme])) {
+// 7.B : Vérification si le joueur a déjà une réponse enregistrée pour CETTE énigme
+if (isset($json[$player_key]['reponses'][$enigme])) {
     // Le joueur est bloqué, on lui affiche le message "Déjà répondu"
     $message = $msg_deja;
 } else {
-    // 6.C : Comparaison de sa réponse avec la/les bonne(s) réponse(s)
+    // 7.C : Comparaison de la réponse
     $is_correct = false;
-
-    // Cas multi-réponses (tableau séparé par des point-virgules côté admin)
-    if (is_array($reponse_correcte)) {
-        foreach ($reponse_correcte as $rep) {
-            if ($reponse_normalized === normalizeString($rep)) {
-                $is_correct = true;
-                break;
+    
+    // Si le champ réponse est désactivé, on considère que c'est automatiquement gagné (mode Check-in)
+    if (!$fields['reponse']) {
+        $is_correct = true;
+        $reponse_normalized = "Check-in validé";
+    } else {
+        // Cas multi-réponses (tableau séparé par des point-virgules côté admin)
+        if (is_array($reponse_correcte)) {
+            foreach ($reponse_correcte as $rep) {
+                if ($reponse_normalized === normalizeString($rep)) {
+                    $is_correct = true;
+                    break;
+                }
             }
-        }
-    } 
-    // Cas réponse unique (chaîne de texte simple)
-    else {
-        if ($reponse_normalized === normalizeString($reponse_correcte)) {
-            $is_correct = true;
+        } 
+        // Cas réponse unique (chaîne de texte simple)
+        else {
+            if ($reponse_normalized === normalizeString($reponse_correcte)) {
+                $is_correct = true;
+            }
         }
     }
 
     // Récupération de l'option "1 seule tentative max"
     $une_seule_tentative = $datas['options']['une_seule_tentative'] ?? false;
 
-    // 6.D : Traitement du résultat
+    // 7.D : Traitement du résultat
     if ($is_correct) {
         // C'est juste ! On enregistre sa réponse et on prépare le message de victoire
-        $json[$email]['reponses'][$enigme] = ["reponse" => $reponse_normalized];
+        $json[$player_key]['reponses'][$enigme] = ["reponse" => $reponse_normalized];
         $message = $msg_bonne;
     } else {
         // C'est faux ! On prépare le message d'erreur
@@ -155,26 +178,24 @@ if (isset($json[$email]['reponses'][$enigme])) {
         // VÉRIFICATION TENTATIVE UNIQUE :
         if ($une_seule_tentative) {
             // L'option est activée. Pour l'empêcher de rejouer, on inscrit une réponse factice ("///")
-            // Ainsi, à sa prochaine tentative, le script s'arrêtera à l'étape 6.B (Déjà répondu).
-            $json[$email]['reponses'][$enigme] = ["reponse" => "///"];
+            // Ainsi, à sa prochaine tentative, le script s'arrêtera à l'étape 7.B (Déjà répondu).
+            $json[$player_key]['reponses'][$enigme] = ["reponse" => "///"];
         }
-        // Si l'option n'est pas activée (comportement par défaut), on n'enregistre rien dans le fichier.
-        // Le joueur n'ayant pas de trace dans le JSON, il pourra soumettre à nouveau le formulaire.
     }
 
     // ========================================================================
-    // 7. SAUVEGARDE DANS LE FICHIER (UNIQUEMENT SI NÉCESSAIRE)
+    // 8. SAUVEGARDE DANS LE FICHIER (UNIQUEMENT SI NÉCESSAIRE)
     // ========================================================================
-    if (!empty($json[$email]['reponses'])) {
+    if (!empty($json[$player_key]['reponses'])) {
         // Trie les énigmes du joueur par ordre alphabétique pour garder un fichier JSON propre
-        $enigmes = array_keys($json[$email]['reponses']);
+        $enigmes = array_keys($json[$player_key]['reponses']);
         if (is_array($enigmes)) {
             natsort($enigmes);
             $sorted = [];
             foreach ($enigmes as $e) {
-                $sorted[$e] = $json[$email]['reponses'][$e];
+                $sorted[$e] = $json[$player_key]['reponses'][$e];
             }
-            $json[$email]['reponses'] = $sorted;
+            $json[$player_key]['reponses'] = $sorted;
         }
 
         // Chiffrement et sauvegarde des données
@@ -186,7 +207,7 @@ if (isset($json[$email]['reponses'][$enigme])) {
 
 
 // ========================================================================
-// 8. RÉCUPÉRATION DU THÈME POUR LA PAGE DE RÉSULTAT
+// 9. RÉCUPÉRATION DU THÈME POUR LA PAGE DE RÉSULTAT
 // ========================================================================
 $theme_msg = $datas['theme_messages'] ?? [
     'background' => '#f9f9f9',
@@ -200,12 +221,11 @@ $theme_msg = $datas['theme_messages'] ?? [
 <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <!-- Balise viewport indispensable pour l'affichage correct sur les téléphones mobiles -->
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Résultat - <?php echo htmlspecialchars($enigme, ENT_QUOTES); ?></title>
         <link rel="stylesheet" href="style.css">
-
-        <!-- Application des couleurs personnalisées par l'administrateur pour la page de résultat -->
+        
+        <!-- Application des couleurs personnalisées -->
         <style>
             body {
                 background-color: <?php echo htmlspecialchars($theme_msg['background']); ?>;
@@ -214,7 +234,7 @@ $theme_msg = $datas['theme_messages'] ?? [
             .enigme-container {
                 background-color: <?php echo htmlspecialchars($theme_msg['container_bg']); ?>;
                 border: 2px solid <?php echo htmlspecialchars($theme_msg['border_color']); ?>;
-                text-align: center; /* On centre le texte sur cette page de résultat */
+                text-align: center;
             }
             .enigme-container h2, .enigme-container h3 {
                 color: <?php echo htmlspecialchars($theme_msg['title_color']); ?>;
@@ -223,8 +243,6 @@ $theme_msg = $datas['theme_messages'] ?? [
     </head>
     <body>
         <div class="enigme-container">
-            <!-- On affiche le texte (HTML autorisé) correspondant au résultat de l'utilisateur -->
-            <!-- Note : On n'utilise PAS htmlspecialchars ici car l'admin est autorisé à mettre du code HTML (ex: <h2>, <br>) dans ses messages -->
             <?php echo $message; ?>
         </div>
     </body>
