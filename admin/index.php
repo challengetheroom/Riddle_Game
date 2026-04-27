@@ -59,13 +59,17 @@ $activeTab = $_GET['tab'] ?? 'resultats';
     <head>
         <meta charset="UTF-8">
         <title>Admin - Gestion des énigmes</title>
-        <!-- Feuille de style globale du projet -->
+        <!-- Feuille de style globale du projet (située dans le dossier parent) -->
         <link rel="stylesheet" href="../style.css">
+        <!-- Feuille de style spécifique à l'administration -->
+        <link rel="stylesheet" href="style-admin.css">
         <!-- CSS de DataTables (pour le tableau des résultats triable/cherchable) -->
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
         <!-- Scripts jQuery et DataTables -->
         <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <!-- Script pour l'éditeur de texte riche TinyMCE (Onglet Création de message) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
     </head>
     <body>
         <div class="container">
@@ -88,6 +92,7 @@ $activeTab = $_GET['tab'] ?? 'resultats';
                 <div class="tab <?php echo ($activeTab === 'resultats') ? 'active' : ''; ?>" data-tab="resultats">Résultats</div>
                 <div class="tab <?php echo ($activeTab === 'edition') ? 'active' : ''; ?>" data-tab="edition">Édition des énigmes</div>
                 <div class="tab <?php echo ($activeTab === 'messages') ? 'active' : ''; ?>" data-tab="messages">Édition des messages</div>
+                <div class="tab <?php echo ($activeTab === 'creation') ? 'active' : ''; ?>" data-tab="creation">Création de message</div>
                 <div class="tab <?php echo ($activeTab === 'datas') ? 'active' : ''; ?>" data-tab="datas">Données</div>
             </div>
 
@@ -105,6 +110,11 @@ $activeTab = $_GET['tab'] ?? 'resultats';
             <!-- ONGLET 3 : ÉDITION DES MESSAGES DE RÉSULTAT                -->
             <!-- ========================================================== -->
             <?php include 'tabs/tab_messages.php'; ?>
+
+            <!-- ========================================================== -->
+            <!-- ONGLET NOUVEAU : CRÉATION DE MESSAGE (Bac à sable)         -->
+            <!-- ========================================================== -->
+            <?php include 'tabs/tab_creation.php'; ?>
 
             <!-- ========================================================== -->
             <!-- ONGLET 4 : AFFICHAGE DES DONNÉES BRUTES (DEBUG/SÉCURITÉ)   -->
