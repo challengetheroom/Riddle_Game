@@ -105,8 +105,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     // --- METTRE À JOUR LES OPTIONS GLOBALES DU JEU ---
     elseif ($action === 'update_options') {
-        // Enregistre si la case "1 seule tentative" a été cochée (true) ou non (false)
         $datas['options']['une_seule_tentative'] = isset($_POST['une_seule_tentative']) ? true : false;
+
+        // Enregistrement de l'état des 4 champs
+        $datas['options']['fields'] = [
+            'email'   => isset($_POST['field_email']) ? true : false,
+            'nom'     => isset($_POST['field_nom']) ? true : false,
+            'prenom'  => isset($_POST['field_prenom']) ? true : false,
+            'reponse' => isset($_POST['field_reponse']) ? true : false
+        ];
+
         $message = "Options globales mises à jour.";
     }
     // --- MODIFIER UNE ÉNIGME EXISTANTE ---
