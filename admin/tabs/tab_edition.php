@@ -16,6 +16,8 @@
                 <!-- Champs cachés pour diriger la requête vers la bonne action PHP -->
                 <input type="hidden" name="action" value="update_theme">
                 <input type="hidden" name="active_tab" value="edition">
+                <!-- Champ caché pour conserver le nom du profil -->
+                <input type="hidden" name="theme_enigmes[profile_name]" id="profile_name_input" value="<?php echo htmlspecialchars($currentProfileName, ENT_QUOTES); ?>">
 
                 <div style="display: flex; gap: 20px;">
 
@@ -150,10 +152,19 @@
                                 </label>
 
                             </div>
+
                             <div style="font-size: 11px; color: #777; margin-top: 8px; text-align: center;">
                                 💡 <i>Astuce : Cliquez sur un nombre et glissez la souris de gauche à droite pour l'ajuster rapidement !</i>
                             </div>
+
+                            <!-- BOUTON RESET (Nouveau) -->
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button type="button" id="reset-bg-settings" style="background: #6c757d; color: white; padding: 6px 12px; font-size: 13px; border-radius: 4px; border: none; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
+                                    ↻ Réinitialiser les réglages de l'image
+                                </button>
+                            </div>
                         </div>
+                        <!-- ========================================================= -->
                         <!-- ========================================================= -->
                         <br>
                         <button type="submit" style="margin-top: 20px; width: 100%;">💾 Enregistrer le design</button>
