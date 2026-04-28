@@ -280,11 +280,25 @@ $(document).ready(function(){
     let currentInput = null;
 
     $('.drag-input').mousedown(function(e) {
+        // --- CORRECTION POUR LES FLÈCHES (SPINNERS) ---
+        // On vérifie si l'utilisateur clique à l'extrême droite du champ (là où sont les flèches natives)
+        // Généralement, les flèches font environ 20px de large.
+        const inputWidth = $(this).outerWidth();
+        const clickPositionX = e.offsetX; // Position du clic par rapport au bord gauche de l'input
+
+        // Si on clique dans les 25 derniers pixels à droite, c'est sûrement sur les flèches : on laisse le navigateur faire son job normal !
+        if (clickPositionX > inputWidth - 25) {
+            return; // On annule notre script Drag-to-Change pour ce clic
+        }
+        // ----------------------------------------------
+
         isDragging = true;
         startX = e.pageX;
         currentInput = $(this);
         startValue = parseFloat(currentInput.val()) || 0;
         $('body').css('cursor', 'ew-resize');
+
+        // Empêche la sélection de texte pendant le glissement
         e.preventDefault();
     });
 
@@ -292,9 +306,12 @@ $(document).ready(function(){
         if (!isDragging || !currentInput) return;
 
         const diff = e.pageX - startX;
-        const step = parseFloat(currentInput.attr('step')) || 1;
-        const sensitivity = 0.5;
 
+        // Ajustement de la sensibilité (moins sensible pour que ce soit plus précis)
+        const sensitivity = 0.5; 
+
+        // On n'utilise plus le step pour le drag pour que ce soit fluide, 
+        // mais on garde les min/max pour les limites
         let newValue = startValue + (diff * sensitivity);
         const min = parseFloat(currentInput.attr('min'));
         const max = parseFloat(currentInput.attr('max'));
@@ -302,11 +319,9 @@ $(document).ready(function(){
         if (!isNaN(min) && newValue < min) newValue = min;
         if (!isNaN(max) && newValue > max) newValue = max;
 
-        if (step < 1) {
-            currentInput.val(newValue.toFixed(1));
-        } else {
-            currentInput.val(Math.round(newValue));
-        }
+        // On arrondit à l'entier le plus proche pour avoir des valeurs propres
+        currentInput.val(Math.round(newValue));
+
         updatePreview();
     });
 
@@ -318,8 +333,23 @@ $(document).ready(function(){
         }
     });
 
-    $('.drag-input').on('input change', function() {
+    // Capture aussi les changements faits à la main (clavier ou clics sur les flèches)
+    $('.drag-input').on('input', function() {
         updatePreview();
+    });
+
+    // ========================================================================
+    // 🆕 GESTION DU BOUTON RESET DES PARAMÈTRES D'IMAGE DE FOND
+    // ========================================================================
+    $('#reset-bg-settings').click(function() {
+        // Rétablit les valeurs par défaut
+        $('#bg_opacity').val(100); 
+        $('#bg_scale').val(100);   
+        $('#bg_pos_x').val(50);    
+        $('#bg_pos_y').val(50);    
+
+        // Met à jour l'aperçu en direct
+        updatePreview(); 
     });
 
     // Lancement visuel initial
