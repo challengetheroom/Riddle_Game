@@ -57,12 +57,22 @@ if (file_exists($profilesFile)) {
                             <button type="submit" style="background: #007BFF; padding: 6px 12px; font-size: 13px;" onclick="return confirm('⚠️ ATTENTION ! Charger ce profil va écraser et remplacer toutes vos énigmes et résultats actuels.\\n\\nAvez-vous bien sauvegardé votre jeu actuel avant ?');">📂 Charger</button>
                         </form>
 
-                        <!-- NOUVEAU : Bouton Mettre à jour -->
+                        <!-- Bouton Mettre à jour -->
                         <form method="POST" style="display: inline-block; margin: 0; margin-left: 5px; padding: 0; background: none; box-shadow: none; border: none;">
                             <input type="hidden" name="action" value="update_profile">
                             <input type="hidden" name="profile_id" value="<?php echo $id; ?>">
                             <button type="submit" style="background: #ffc107; color: #333; padding: 6px 12px; font-size: 13px;" onclick="return confirm('Écraser ce profil avec l\'état actuel du jeu ?');">🔄 Mettre à jour</button>
                         </form>
+
+                        <!-- NOUVEAU : Bouton Dupliquer -->
+                        <form method="POST" style="display: inline-block; margin: 0; margin-left: 5px; padding: 0; background: none; box-shadow: none; border: none;">
+                            <input type="hidden" name="action" value="duplicate_profile">
+                            <input type="hidden" name="profile_id" value="<?php echo $id; ?>">
+                            <button type="submit" style="background: #17a2b8; color: white; padding: 6px 12px; font-size: 13px;" title="Créer une copie">📋 Dupliquer</button>
+                        </form>
+
+                        <!-- NOUVEAU : Bouton Renommer (Appelle la fonction JS dans admin.js) -->
+                        <button type="button" style="background: #6c757d; color: white; padding: 6px 12px; font-size: 13px; border: none; cursor: pointer; border-radius: 3px; margin-left: 5px;" onclick="renameProfile('<?php echo $id; ?>', '<?php echo addslashes($p['name']); ?>')">✏️ Renommer</button>
 
                         <!-- Bouton Supprimer -->
                         <form method="POST" style="display: inline-block; margin: 0; margin-left: 5px; padding: 0; background: none; box-shadow: none; border: none;">

@@ -16,7 +16,7 @@ function openQrPopup(imgSrc, enigmeName) {
 
 // Sécurité de suppression (Onglet 4)
 function confirmReset(fileType) {
-    if (confirm("⚠️ ATTENTION : Voulez-vous vraiment vider totalement le fichier " + fileType + ".txt ?\n\nToutes les données seront perdues. Cette action est IRRÉVERSIBLE.")) {
+    if (confirm("⚠️ ATTENTION : Voulez-vous vraiment vider totalement le fichier " + fileType + ".txt ?\\n\\nToutes les données seront perdues. Cette action est IRRÉVERSIBLE.")) {
         let pwd = prompt("Veuillez entrer le mot de passe administrateur pour confirmer la suppression de " + fileType + ".txt :");
 
         if (pwd !== null && pwd.trim() !== "") {
@@ -31,6 +31,19 @@ function confirmReset(fileType) {
         } else if (pwd !== null) {
             alert("Mot de passe vide, action annulée.");
         }
+    }
+}
+
+// Fonction pour renommer un profil (Onglet Profils)
+function renameProfile(id, currentName) {
+    let newName = prompt("Entrez le nouveau nom pour ce profil :", currentName);
+    if (newName && newName.trim() !== "" && newName !== currentName) {
+        let form = $('<form>', { method: 'POST', action: 'index.php', style: 'display:none;' });
+        form.append($('<input>', { type: 'hidden', name: 'action', value: 'rename_profile' }));
+        form.append($('<input>', { type: 'hidden', name: 'profile_id', value: id }));
+        form.append($('<input>', { type: 'hidden', name: 'new_name', value: newName }));
+        $('body').append(form);
+        form.submit();
     }
 }
 
@@ -322,6 +335,9 @@ $(document).ready(function(){
         // On arrondit à l'entier le plus proche pour avoir des valeurs propres
         currentInput.val(Math.round(newValue));
 
+        // Force le déclenchement de l'événement 'input' pour alerter le système de sécurité
+        currentInput.trigger('input');
+
         updatePreview();
     });
 
@@ -369,16 +385,69 @@ $(document).ready(function(){
         const isWarnCheckbox = $(this).attr('id') === 'warn_unsaved';
 
         if (!isTabButton && !isHidden && !isWarnCheckbox) {
-            isDirty = true;
+            if (!isDirty) {
+                isDirty = true;
+
+                // NOUVEAU : Met à jour l'apparence du bandeau du profil
+                $('#display-profile-name').css('font-weight', 'bold');
+                $('#unsaved-asterisk').show();
+                $('#btn-quick-update').show();
+            }
         }
     });
 
-    // 2. Si on clique sur un vrai bouton de sauvegarde (form submit), on annule l'alerte
+    // 2. Si on clique sur un vrai bouton de sauvegarde (form submit), on annule l'alerte ET on force l'onglet actif
     $('form').on('submit', function() {
         isDirty = false;
+
+        // On récupère le nom de l'onglet visuellement actif
+        const currentTab = $('.tab.active').data('tab') || 'resultats';
+
+        // On injecte ou met à jour ce nom dans le formulaire qui est en train d'être envoyé
+        if ($(this).find('input[name="active_tab"]').length === 0) {
+            $(this).append('<input type="hidden" name="active_tab" value="' + currentTab + '">');
+        } else {
+            $(this).find('input[name="active_tab"]').val(currentTab);
+        }
     });
 
-    // 3. Gestion de l'état de la case à cocher (mémorisé dans le navigateur)
+    // 3. Action du bouton "Mettre à jour" du bandeau
+    $('#btn-quick-update').click(function() {
+        if (!confirm("⚠️ Êtes-vous sûr de vouloir mettre à jour la sauvegarde de ce profil avec TOUTES les modifications actuelles de la page ?")) {
+            return false;
+        }
+
+        const profileId = $(this).data('profile-id');
+        const currentTab = $('.tab.active').data('tab') || 'resultats';
+
+        // On récupère le formulaire actif sur l'onglet actuel (s'il y en a un qui contient des champs de saisie)
+        const activeForm = $('#' + currentTab).find('form').filter(function() {
+            // On cherche le formulaire principal de l'onglet (pas les petits formulaires de suppression)
+            return $(this).find('input[type="text"], input[type="color"], input[type="number"], textarea, select').length > 0;
+        }).first();
+
+        // Si on a trouvé un formulaire avec des modifications, on modifie son action pour faire d'une pierre deux coups !
+        if (activeForm.length > 0) {
+            // On ajoute un champ caché pour dire au serveur de faire AUSSI une mise à jour du profil après avoir enregistré les données
+            if (activeForm.find('input[name="also_update_profile"]').length === 0) {
+                activeForm.append('<input type="hidden" name="also_update_profile" value="' + profileId + '">');
+            }
+            // On désactive l'alerte de sécurité et on soumet LE formulaire de la page
+            isDirty = false;
+            activeForm.submit();
+        } else {
+            // S'il n'y a pas de formulaire à enregistrer sur cet onglet, on fait juste la mise à jour classique du profil
+            let form = $('<form>', { method: 'POST', action: 'index.php', style: 'display:none;' });
+            form.append($('<input>', { type: 'hidden', name: 'action', value: 'update_profile' }));
+            form.append($('<input>', { type: 'hidden', name: 'profile_id', value: profileId }));
+            form.append($('<input>', { type: 'hidden', name: 'active_tab', value: currentTab }));
+            $('body').append(form);
+            isDirty = false;
+            form.submit();
+        }
+    });
+
+    // 4. Gestion de l'état de la case à cocher (mémorisé dans le navigateur)
     const warnEnabled = localStorage.getItem('warn_unsaved_changes') !== 'false'; // true par défaut
     $('#warn_unsaved').prop('checked', warnEnabled);
 

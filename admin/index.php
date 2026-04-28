@@ -74,9 +74,44 @@ $activeTab = $_GET['tab'] ?? 'resultats';
     <body>
         <div class="container">
 
-            <!-- En-tête avec bouton de déconnexion -->
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Admin - Gestion des énigmes</h1>
+            <!-- En-tête avec profil actif et bouton de déconnexion -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <h1 style="margin: 0;">Admin - Gestion des énigmes</h1>
+
+                <!-- ========================================================== -->
+                <!-- BANDEAU DU PROFIL ACTIF                                    -->
+                <!-- ========================================================== -->
+                <?php
+                $activeProfileName = $datas['options']['current_profile_name'] ?? null;
+                $activeProfileId = $datas['options']['current_profile_id'] ?? null;
+                $unsavedChanges = $datas['options']['unsaved_profile_changes'] ?? false;
+                ?>
+                <div id="active-profile-banner" style="background: #e8f0ff; padding: 8px 15px; border-radius: 8px; border: 1px solid #b5ceEE; display: flex; align-items: center; gap: 15px; flex-grow: 1; max-width: fit-content;">
+                    <div style="font-size: 15px;">
+                        Profil : 
+                        <?php if ($activeProfileName): ?>
+                        <span id="display-profile-name" style="color: #1a4f9b; <?php echo $unsavedChanges ? 'font-weight: bold;' : ''; ?>"><?php echo htmlspecialchars($activeProfileName); ?></span>
+                        <span id="unsaved-asterisk" style="color: #dc3545; font-size: 1.2em; font-weight: bold; <?php echo $unsavedChanges ? 'display: inline;' : 'display: none;'; ?> vertical-align: middle;" title="Modifications non sauvegardées"> *</span>
+                        <?php else: ?>
+                        <span style="font-style: italic; color: #6c757d;">Profil inconnu</span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div>
+                        <?php if ($activeProfileName): ?>
+                        <button type="button" id="btn-quick-update" data-profile-id="<?php echo htmlspecialchars($activeProfileId); ?>" style="<?php echo $unsavedChanges ? 'display: inline-block;' : 'display: none;'; ?> background: #ffc107; color: #333; font-weight: bold; padding: 5px 10px; border-radius: 4px; border: 1px solid #d39e00; cursor: pointer; font-size: 13px; margin: 0;">
+                            🔄 Mettre à jour
+                        </button>
+                        <?php else: ?>
+                        <!-- Bouton qui utilise jQuery pour activer l'onglet Profils -->
+                        <button type="button" style="background: #28a745; color: white; font-weight: bold; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px;" onclick="$('.tab').removeClass('active'); $('.tab-content').removeClass('active'); $('[data-tab=\\'profils\\']').addClass('active'); $('#profils').addClass('active');">
+                            💾 Sauvegarder (Nouveau)
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <!-- ========================================================== -->
+
                 <a href="?logout=1" style="background: #dc3545; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
                     🚪 Déconnexion
                 </a>

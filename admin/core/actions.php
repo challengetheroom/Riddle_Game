@@ -246,10 +246,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     // ========================================================================
-    // 🆕 GESTION DES PROFILS (Sauvegarder, Charger, Supprimer avec QR Codes)
+    // 🆕 GESTION DES PROFILS (Sauvegarder, Charger, Supprimer, Dupliquer, Renommer)
     // ========================================================================
 
-    // 1. Sauvegarder l'état actuel
+    // 1. Sauvegarder l'état actuel (Créer un nouveau profil)
     elseif ($action === 'save_profile') {
         $profile_name = trim($_POST['profile_name'] ?? '');
         if ($profile_name) {
@@ -259,42 +259,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $profiles = json_decode(decryptData(file_get_contents($profilesFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
             }
 
-            // Récupération des bases de données
+            // Récupération des bases de données actuelles
             $current_datas = file_exists('data/datas.txt') ? json_decode(decryptData(file_get_contents('data/datas.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
             $current_received = file_exists('data/received.txt') ? json_decode(decryptData(file_get_contents('data/received.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
 
-            // --- NOUVEAU : Sauvegarde des QR Codes en Base64 ---
+            // Sauvegarde des QR Codes en Base64
             $qr_codes_backup = [];
             $qrDir = __DIR__ . '/../QRCodes';
             if (is_dir($qrDir)) {
                 $files = glob($qrDir . '/*.png');
                 foreach ($files as $file) {
                     $filename = basename($file);
-                    // On encode l'image en base64 pour la stocker facilement dans notre JSON
                     $qr_codes_backup[$filename] = base64_encode(file_get_contents($file));
                 }
             }
 
             $profile_id = uniqid('prof_');
 
-            // Stockage global
+            // --- NOUVEAU : On mémorise que ce nouveau profil devient le profil actif ---
+            if (!isset($current_datas['options'])) $current_datas['options'] = [];
+            $current_datas['options']['current_profile_id'] = $profile_id;
+            $current_datas['options']['current_profile_name'] = $profile_name;
+            // NOUVEAU : on s'assure qu'un nouveau profil n'a pas l'alerte d'emblée
+            unset($current_datas['options']['unsaved_profile_changes']);
+
+            // On sauvegarde tout de suite dans datas.txt pour actualiser l'interface
+            $enc_current = encryptData(json_encode($current_datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+            file_put_contents('data/datas.txt', $enc_current, LOCK_EX);
+
+            // Stockage global du profil dans profiles.txt
             $profiles[$profile_id] = [
                 'name' => $profile_name,
                 'date' => date('d/m/Y H:i:s'),
                 'datas' => $current_datas,
                 'received' => $current_received,
-                'qrcodes' => $qr_codes_backup // NOUVEAU : L'archive des images
+                'qrcodes' => $qr_codes_backup
             ];
 
             $enc = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
             file_put_contents($profilesFile, $enc, LOCK_EX);
 
-            header("Location: index.php?tab=profils&msg=" . urlencode("Le profil et ses QR Codes ont été sauvegardés."));
+            header("Location: index.php?tab=$activeTab&msg=" . urlencode("Le profil et ses QR Codes ont été sauvegardés."));
             exit;
         }
     }
 
-    // 2. Charger un profil
+    // 2. Charger un profil existant
     elseif ($action === 'load_profile') {
         $profile_id = $_POST['profile_id'] ?? '';
         $profilesFile = 'data/profiles.txt';
@@ -305,6 +315,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($profiles[$profile_id])) {
                 $p = $profiles[$profile_id];
 
+                // --- NOUVEAU : On mémorise l'identité du profil qu'on vient de charger ---
+                if (!isset($p['datas']['options'])) $p['datas']['options'] = [];
+                $p['datas']['options']['current_profile_id'] = $profile_id;
+                $p['datas']['options']['current_profile_name'] = $p['name'];
+                // NOUVEAU : on s'assure qu'un profil chargé n'a pas l'alerte d'emblée
+                unset($p['datas']['options']['unsaved_profile_changes']);
+
                 // Restauration des fichiers textes
                 $enc_datas = encryptData(json_encode($p['datas'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
                 file_put_contents('data/datas.txt', $enc_datas, LOCK_EX);
@@ -312,10 +329,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $enc_received = encryptData(json_encode($p['received'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
                 file_put_contents('data/received.txt', $enc_received, LOCK_EX);
 
-                // --- NOUVEAU : Restauration des QR Codes ---
+                // Restauration des QR Codes
                 $qrDir = __DIR__ . '/../QRCodes';
 
-                // 2.A - On vide le dossier actuel pour ne garder que les QR du profil
                 if (is_dir($qrDir)) {
                     $files = glob($qrDir . '/*.png');
                     foreach ($files as $file) {
@@ -325,20 +341,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mkdir($qrDir, 0777, true);
                 }
 
-                // 2.B - On recrée physiquement les images à partir de la sauvegarde base64
                 if (isset($p['qrcodes']) && is_array($p['qrcodes'])) {
                     foreach ($p['qrcodes'] as $filename => $base64_data) {
                         file_put_contents($qrDir . '/' . $filename, base64_decode($base64_data));
                     }
                 }
 
-                header("Location: index.php?tab=profils&msg=" . urlencode("Profil chargé ! Données et QR Codes restaurés."));
+                header("Location: index.php?tab=$activeTab&msg=" . urlencode("Profil chargé ! Données et QR Codes restaurés."));
                 exit;
             }
         }
     }
 
-    // 2.5 Mettre à jour un profil existant
+    // 3. Mettre à jour un profil existant (Écrase sa sauvegarde)
     elseif ($action === 'update_profile') {
         $profile_id = $_POST['profile_id'] ?? '';
         $profilesFile = 'data/profiles.txt';
@@ -347,11 +362,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profiles = json_decode(decryptData(file_get_contents($profilesFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
 
             if (isset($profiles[$profile_id])) {
-                // On récupère l'état actuel des bases de données
                 $current_datas = file_exists('data/datas.txt') ? json_decode(decryptData(file_get_contents('data/datas.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
                 $current_received = file_exists('data/received.txt') ? json_decode(decryptData(file_get_contents('data/received.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
 
-                // --- Sauvegarde des QR Codes en Base64 ---
                 $qr_codes_backup = [];
                 $qrDir = __DIR__ . '/../QRCodes';
                 if (is_dir($qrDir)) {
@@ -362,23 +375,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // On met à jour la date, les données, et les images du profil ciblé
+                // --- NOUVEAU : On s'assure que le profil actif reste bien enregistré ---
+                if (!isset($current_datas['options'])) $current_datas['options'] = [];
+                $current_datas['options']['current_profile_id'] = $profile_id;
+                $current_datas['options']['current_profile_name'] = $profiles[$profile_id]['name'];
+
+                // NOUVEAU : On efface le marqueur car le profil est de nouveau à jour
+                unset($current_datas['options']['unsaved_profile_changes']);
+
+                // Sauvegarde silencieuse dans datas.txt pour retirer la potentielle alerte "non-sauvegardé"
+                $enc_current = encryptData(json_encode($current_datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                file_put_contents('data/datas.txt', $enc_current, LOCK_EX);
+
                 $profiles[$profile_id]['date'] = date('d/m/Y H:i:s') . ' (mis à jour)';
                 $profiles[$profile_id]['datas'] = $current_datas;
                 $profiles[$profile_id]['received'] = $current_received;
                 $profiles[$profile_id]['qrcodes'] = $qr_codes_backup;
 
-                // On chiffre et on sauvegarde
                 $enc = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
                 file_put_contents($profilesFile, $enc, LOCK_EX);
 
-                header("Location: index.php?tab=profils&msg=" . urlencode("Le profil a été mis à jour avec l'état actuel."));
+                header("Location: index.php?tab=$activeTab&msg=" . urlencode("La sauvegarde du profil a été mise à jour avec vos modifications."));
                 exit;
             }
         }
     }
 
-    // 3. Supprimer un profil
+    // 4. Supprimer un profil
     elseif ($action === 'delete_profile') {
         $profile_id = $_POST['profile_id'] ?? '';
         $profilesFile = 'data/profiles.txt';
@@ -392,7 +415,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $enc = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
                 file_put_contents($profilesFile, $enc, LOCK_EX);
 
-                header("Location: index.php?tab=profils&msg=" . urlencode("Profil supprimé avec succès."));
+                // --- NOUVEAU : Si on supprime le profil actuellement utilisé, on le "désactive" de la mémoire ---
+                $current_datas = file_exists('data/datas.txt') ? json_decode(decryptData(file_get_contents('data/datas.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
+                if (isset($current_datas['options']['current_profile_id']) && $current_datas['options']['current_profile_id'] === $profile_id) {
+                    unset($current_datas['options']['current_profile_id']);
+                    unset($current_datas['options']['current_profile_name']);
+                    unset($current_datas['options']['unsaved_profile_changes']); // On nettoie tout
+                    $enc_current = encryptData(json_encode($current_datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                    file_put_contents('data/datas.txt', $enc_current, LOCK_EX);
+                }
+
+                header("Location: index.php?tab=$activeTab&msg=" . urlencode("Profil supprimé avec succès."));
+                exit;
+            }
+        }
+    }
+
+    // 5. NOUVEAU : Dupliquer un profil
+    elseif ($action === 'duplicate_profile') {
+        $profile_id = $_POST['profile_id'] ?? '';
+        $profilesFile = 'data/profiles.txt';
+
+        if ($profile_id && file_exists($profilesFile)) {
+            $profiles = json_decode(decryptData(file_get_contents($profilesFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
+
+            if (isset($profiles[$profile_id])) {
+                $newId = uniqid('prof_');
+                $profiles[$newId] = $profiles[$profile_id]; // Copie complète
+                $profiles[$newId]['name'] = $profiles[$profile_id]['name'] . ' (Copie)';
+                $profiles[$newId]['date'] = date('d/m/Y H:i:s');
+
+                $enc = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                file_put_contents($profilesFile, $enc, LOCK_EX);
+
+                header("Location: index.php?tab=$activeTab&msg=" . urlencode("Profil dupliqué avec succès."));
+                exit;
+            }
+        }
+    }
+
+    // 6. NOUVEAU : Renommer un profil
+    elseif ($action === 'rename_profile') {
+        $profile_id = $_POST['profile_id'] ?? '';
+        $new_name = trim(strip_tags($_POST['new_name'] ?? ''));
+        $profilesFile = 'data/profiles.txt';
+
+        if ($profile_id && $new_name && file_exists($profilesFile)) {
+            $profiles = json_decode(decryptData(file_get_contents($profilesFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
+
+            if (isset($profiles[$profile_id])) {
+                $profiles[$profile_id]['name'] = $new_name;
+
+                $enc = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                file_put_contents($profilesFile, $enc, LOCK_EX);
+
+                // --- Si c'est le profil actuellement actif, on actualise aussi le bandeau ---
+                $current_datas = file_exists('data/datas.txt') ? json_decode(decryptData(file_get_contents('data/datas.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
+                if (isset($current_datas['options']['current_profile_id']) && $current_datas['options']['current_profile_id'] === $profile_id) {
+                    $current_datas['options']['current_profile_name'] = $new_name;
+                    $enc_current = encryptData(json_encode($current_datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                    file_put_contents('data/datas.txt', $enc_current, LOCK_EX);
+                }
+
+                header("Location: index.php?tab=$activeTab&msg=" . urlencode("Le profil a été renommé en '$new_name'."));
                 exit;
             }
         }
@@ -403,10 +488,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // SAUVEGARDE FINALE DE DATAS.TXT (Ne s'applique qu'aux actions basiques)
     // ========================================================================
     if (in_array($action, ['add_enigme','update_enigme','delete_enigme','delete_all_enigmes','update_theme','update_options','update_messages', 'reset_file'])) {
+        
+        // --- NOUVEAU : On indique à datas.txt que le profil n'est plus à jour ---
+        if (isset($datas['options']['current_profile_id'])) {
+            $datas['options']['unsaved_profile_changes'] = true;
+        }
+
         ksort($datas, SORT_NATURAL | SORT_FLAG_CASE);
         $plaintext = json_encode($datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         $enc = encryptData($plaintext, $ENCRYPT_KEY, $ENCRYPT_IV);
         file_put_contents($datasFile, $enc, LOCK_EX);
+
+        // Si la requête demandait aussi une mise à jour du profil (via le bouton du bandeau)
+        if (!empty($_POST['also_update_profile'])) {
+            $profile_id = $_POST['also_update_profile'];
+            $profilesFile = 'data/profiles.txt';
+            if (file_exists($profilesFile)) {
+                $profiles = json_decode(decryptData(file_get_contents($profilesFile), $ENCRYPT_KEY, $ENCRYPT_IV), true) ?: [];
+                if (isset($profiles[$profile_id])) {
+                    // On recharge les données toutes fraîches qu'on vient d'enregistrer
+                    $current_datas = json_decode(decryptData(file_get_contents($datasFile), $ENCRYPT_KEY, $ENCRYPT_IV), true);
+                    $current_received = file_exists('data/received.txt') ? json_decode(decryptData(file_get_contents('data/received.txt'), $ENCRYPT_KEY, $ENCRYPT_IV), true) : [];
+
+                    $qr_codes_backup = [];
+                    $qrDir = __DIR__ . '/../QRCodes';
+                    if (is_dir($qrDir)) {
+                        $files = glob($qrDir . '/*.png');
+                        foreach ($files as $file) { $qr_codes_backup[basename($file)] = base64_encode(file_get_contents($file)); }
+                    }
+
+                    // NOUVEAU : On efface le marqueur car le profil est de nouveau à jour
+                    unset($current_datas['options']['unsaved_profile_changes']);
+
+                    // On ré-enregistre datas.txt avec le marqueur effacé
+                    $enc_clean = encryptData(json_encode($current_datas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                    file_put_contents($datasFile, $enc_clean, LOCK_EX);
+
+                    $profiles[$profile_id]['date'] = date('d/m/Y H:i:s') . ' (mis à jour)';
+                    $profiles[$profile_id]['datas'] = $current_datas;
+                    $profiles[$profile_id]['received'] = $current_received;
+                    $profiles[$profile_id]['qrcodes'] = $qr_codes_backup;
+
+                    $enc_prof = encryptData(json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), $ENCRYPT_KEY, $ENCRYPT_IV);
+                    file_put_contents($profilesFile, $enc_prof, LOCK_EX);
+
+                    $message .= " (Et le profil a été mis à jour avec succès !)";
+                }
+            }
+        }
 
         header("Location: index.php?tab=$activeTab&msg=" . urlencode($message));
         exit;
