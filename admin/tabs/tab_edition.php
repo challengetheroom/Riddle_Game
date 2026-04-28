@@ -16,8 +16,6 @@
                 <!-- Champs cachés pour diriger la requête vers la bonne action PHP -->
                 <input type="hidden" name="action" value="update_theme">
                 <input type="hidden" name="active_tab" value="edition">
-                <!-- Champ caché pour conserver le nom du profil -->
-                <input type="hidden" name="theme_enigmes[profile_name]" id="profile_name_input" value="<?php echo htmlspecialchars($currentProfileName, ENT_QUOTES); ?>">
 
                 <div style="display: flex; gap: 20px;">
 
